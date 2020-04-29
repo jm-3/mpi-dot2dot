@@ -1,0 +1,13 @@
+utils.o: utils.c utils.h
+output.o: output.c output.h algorithm.h common.h dot_matrix.h \
+ fileManager.h configReader.h utils.h
+mark_time.o: mark_time.c mark_time.h
+filtering.o: filtering.c filtering.h common.h algorithm.h dot_matrix.h \
+ fileManager.h configReader.h utils.h
+fileManager.o: fileManager.c fileManager.h common.h
+dot_matrix.o: dot_matrix.c dot_matrix.h common.h fileManager.h
+dot.o: dot.c algorithm.h common.h dot_matrix.h fileManager.h \
+ configReader.h utils.h mark_time.h output.h filtering.h
+configReader.o: configReader.c configReader.h common.h utils.h
+algorithm.o: algorithm.c algorithm.h common.h dot_matrix.h fileManager.h \
+ configReader.h utils.h
