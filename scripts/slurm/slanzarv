@@ -1,0 +1,128 @@
+#!/usr/bin/perl -w
+
+use strict;
+use Getopt::Long qw(:config pass_through require_order);
+use Config::Auto;
+use constant CONFIGFILE => "/etc/slurm/slanzar.conf";
+use Data::Dumper;
+use Switch;
+require "$ENV{\"LMOD_PKG\"}/init/perl";
+
+my $numcores=1;
+my $mem=120000;
+my $help=0;
+my $BATCHARGS="";
+my $nomail=0;
+my $short=0;
+my $onlyfaster=0;
+my $family="";
+my $minfamily="";
+my $modules="";
+my $time="";
+my $mpi=0;
+
+GetOptions('help|h' => \$help,
+        'cpus-per-task|c=i' => \$numcores,
+        'mem|m=i' => \$mem,
+        'nomail' => \$nomail,
+        'short' => \$short,
+        'use-only-faster-nodes' => \$onlyfaster,
+        'family=s' => \$family,
+        'min-family=s' => \$minfamily,
+        'with-modules=s' => \$modules,
+        'time|t=s' => \$time,
+        'mpi' => \$mpi);
+showhelp() if $help;
+
+if($#ARGV+1<1){
+        print STDERR "ERROR: Debe especificar el nombre del programa\n";
+        showhelp();
+}
+
+
+if($ARGV[0] =~ /^-/){ # si empieza con -, se trata de parametros. Extraemos hasta encontrar --
+        while($ARGV[0] && $ARGV[0] !~ /^--$/){
+                $BATCHARGS.=$ARGV[0]." ";
+                shift;
+        }
+
+}
+if(!$ARGV[0]){
+        print STDERR "ERROR: sintaxis incorrecta\n";
+        exit 0;
+}
+shift if $ARGV[0] eq '--';
+my $programname = $ARGV[0];
+$programname =~ s/^\.\///; # eliminar el ./ inicial para usarlo en el nombre del archivo
+
+my $SCRIPT=$programname.".slurmscript";
+open(my $fh, '>', $SCRIPT);
+
+print $fh "#!/bin/bash\n";
+print $fh "#SBATCH -J $programname\t# Job name\n";
+print $fh "#SBATCH -o $programname.%j.out\t# Name of stdout output file(%j expands to jobId)\n";
+print $fh "#SBATCH -e $programname.%j.err\t# Name of stderr output file(%j expands to jobId)\n";
+if($mpi){
+        printf $fh "#SBATCH -n $numcores\n";
+        if($numcores > 24){
+                print $fh "#SBATCH --ntasks-per-node=24\n";
+        }else{
+                print $fh "#SBATCH --ntasks-per-node=$numcores\n";
+        }
+}else{
+        if($numcores > 24){
+                print $fh "#SBATCH -c 24\n";
+        }else{
+                print $fh "#SBATCH -c $numcores\n";
+        }
+}
+print $fh "#SBATCH --mem $mem\n";
+
+print $fh "#SBATCH --partition=thinnodes\n";
+
+my $email = 'jmartin@onsager.ugr.es';
+print $fh "#SBATCH --mail-type=END,FAIL\n";
+print $fh "#SBATCH --mail-user=$email\n";
+
+
+print $fh "#SBATCH --time=$time\n" if($time);
+
+
+print $fh "\n";
+print $fh "srun @ARGV\n";
+
+
+close $fh;
+
+system("sbatch $BATCHARGS $SCRIPT");
+#print "MODO-DESARROLLO: el trabajo no se ha enviado a cola\n";
+
+
+sub showhelp{
+        print "\nSLANZARV: script que facilita el envío de trabajos a SLURM\n\n";
+        print "Modo de uso:\n";
+        print "\tslanzarv [opciones] programa [argumentos]\n";
+        print "\tOpciones:\n";
+        print "\t\t--cpus-per-task | -c : número de CPUs\n";
+        print "\t\t--mem | -m : tamaño de memoria en MB\n";
+        print "\t\t--nomail : desactiva el envio de email en caso de fallo o cuando finaliza el trabajo\n";
+        print "\t\t--short : envia el trabajo a la cola corta\n";
+        print "\t\t--time | -t: máximo tiempo de ejecución (ha de ser menor que el tiempo límite de la partición). Por defecto, el tiempo por defecto de la partición. Formatos:\n";
+        print "\t\t\t \"minutes\", \"minutes:seconds\", \"hours:minutes:seconds\", \"days-hours\", \"days-hours:minutes\" and \"days-hours:minutes:seconds\"\n";
+        print "\t\t--use-only-faster-nodes : el trabajo solo podrá ser ejecutado en los nodos más potentes (grupo metis, hermes o kratos). No tiene efecto en la cola corta, puesto que esta cola solo usa los más nodos rápidos\n";
+        print "\t\t--family : permite seleccionar la familia de CPUs en la que se ejecutará el trabajo. Las opciones disponibles son (ordenados de más nuevos a más antiguos)\n";
+        print "\t\t\ta) por grupos: metis, hermes, kratos, calypso\n";
+        print "\t\t\tb) por microarquitectura: cascadelake, skylake, broadwell, haswell, westmere-ep, harpertown\n";
+        print "\t\t--min-family : permite seleccionar la familia más antigua de CPUs a usar. Ejemplo: --min-family=kratos podrá usar metis, hermes y kratos, pero no calypso\n";
+        print "\t\t--with-modules : lista separada por comas y sin espacios de modulos necesarios para la ejecucion\n";
+        print "\n";
+        print "\tEjemplo:\n";
+        print "\t\tSolicitar 8 CPUs y 2400 MB de RAM para miprograma llamado con los los argumentos '230 asx'\n";
+        print "\t\t\tslanzarv -c 8 -m 24000 ./miprograma 230 asx\n";
+        print "\tUso avanzado:\n";
+        print "\t\tSe pueden pasar opciones adicionales a sbatch. Para ello, es necesario indicar el fin de las opciones con --\n";
+        print "\t\t\tslanzarv -c 4 -m 3400 --contiguous --hold -- ./miprograma 230 asx\n";
+
+        exit 0;
+}
+
