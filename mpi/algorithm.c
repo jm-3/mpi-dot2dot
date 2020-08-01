@@ -583,7 +583,7 @@ void expansion_filter(TRs_Result_Bundle* TRs_bundle, TRs_Result_Bundle* last_tan
 		if (TRs_bundle->trs_found_offset > 0) {
 			
 #ifdef DEBUG_ALG
-			printf("\t|-- Exp Filter --> There is one or more TRs: %d\n", tot_trs_left);		
+			printf("\t|-- Exp Filter --> There is one or more TRs: %lu\n", tot_trs_left);		
 #endif	
 			
 			for ( i = 0; i < TRs_bundle->trs_found_offset; ++i ) {
@@ -611,7 +611,7 @@ void expansion_filter(TRs_Result_Bundle* TRs_bundle, TRs_Result_Bundle* last_tan
 			/*Second, filter by purity */
 			/*Start from the first valid*/
 #ifdef DEBUG_ALG
-			printf("\t|-- Exp Filter --> There are %d TRs left after filtering by score and partial length\n", tot_trs_left);			
+			printf("\t|-- Exp Filter --> There are %lu TRs left after filtering by score and partial length\n", tot_trs_left);			
 #endif
 			i = 0;
 			while ( (results[i].copy_number == 0) && ( i < TRs_bundle->trs_found_offset ) ) ++i;
