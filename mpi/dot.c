@@ -27,6 +27,7 @@ int main (int argc, char* argv[]) {
   #ifdef DEBUG_TIME  
     double tread=0, tcomp=0, twrite=0, twait=0, tcomun=0, start, end;
   #endif
+  MPI_Request request;
 
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &commsize);
@@ -218,7 +219,10 @@ int main (int argc, char* argv[]) {
     start = MPI_Wtime();    
   #endif  
 
-  MPI_Barrier(MPI_COMM_WORLD);
+  if(rank == 0)
+    MPI_Barrier(MPI_COMM_WORLD);
+  else
+    MPI_Ibarrier(MPI_COMM_WORLD, &request);
 
   #ifdef DEBUG_TIME
     end = MPI_Wtime();
