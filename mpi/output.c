@@ -89,13 +89,13 @@ void print_TRs_list_toFile (struct outfile *out, char* label, char* sequence, TR
   TRs_result_t* trs_toPrint = trs_bundle->TRs_found;
   unsigned short int* motifs_lengths = trs_bundle->motif_lengths;
   unsigned int i;
-  char buff[32770], buff2[32768];
+  char buff[32769], buff2[32768];
   /*Print the record of tandem repeats to FILENAME*/
   i=0;
   while ( i < trs_bundle->trs_found_offset ) {
     /*  Print only unfiltered TRs */
     if (trs_toPrint[i].valid_TR == true) {
-      dump_TR_elem (out, sequence, &trs_toPrint[i], motifs_lengths, buff, buff2, 32768);
+      dump_TR_elem (out, sequence, &trs_toPrint[i], motifs_lengths, buff, buff2, 32769);
       if (out->pf == NULL) printf ("%s\t%s", label ,buff);
       else fprintf (out->pf, "%s\t%s", label ,buff);
     }  
