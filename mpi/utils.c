@@ -125,3 +125,21 @@ char* toLower(char* s) {
   for(char *p=s; *p; p++) *p=tolower(*p);
   return s;
 }
+
+const char *get_filename_ext(const char *filename) {
+  const char *dot = strrchr(filename, '.');
+  if(!dot || dot == filename) return "";
+  return dot;
+}
+
+char *remove_filename_ext(char* myStr) {
+  char *retStr;
+  char *lastExt;
+  if (myStr == NULL) return NULL;
+  if ((retStr = malloc (strlen (myStr) + 1)) == NULL) return NULL;
+  strcpy (retStr, myStr);
+  lastExt = strrchr (retStr, '.');
+  if (lastExt != NULL)
+      *lastExt = '\0';
+  return retStr;
+}

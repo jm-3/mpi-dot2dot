@@ -17,13 +17,12 @@ int main (int argc, char* argv[]) {
   struct sequence_t *seq; /*   contains information on the last loaded seq  */
   struct dot_matrix *dm;
   Dot_input *param=NULL;
-  int i, res, rank, commsize;
+  int res, rank, commsize;
   struct sequences_info * sinfo;  
   struct assigments * assings=NULL;  
   unsigned int myassingments, iter = 0, *num_assigs=NULL;
   unsigned long int *sizes=NULL, mysize;  
   long int myoffset, *offsets=NULL;  
-  char tempOuputFile[MAX_PARAM_LEN+50], *path, *filename, *aux;
   #ifdef DEBUG_TIME  
     double tread=0, tcomp=0, twrite=0, twait=0, tcomun=0, start, end;
   #endif
@@ -54,13 +53,7 @@ int main (int argc, char* argv[]) {
     MPI_Abort(MPI_COMM_WORLD, 1);
   }
   else {
-    aux = strdup(cfg->output_filename);
-    path = dirname(aux);
-    aux = strdup(cfg->output_filename);
-    filename = basename(aux);
-    sprintf(tempOuputFile,"%s/tmp-%s-%d.dot",path,filename,rank);
-
-    output = output_create (tempOuputFile);
+    output = output_create_tmp (cfg->output_filename, rank);
   }
 
   
@@ -235,10 +228,10 @@ int main (int argc, char* argv[]) {
     #endif    
 
     if(merge_files(cfg->output_filename, commsize)){
-      perror("ERROR merging temp output files\n");      
+      perror("ERROR merging temp output files");      
     }
     if(remove_tmpfiles(cfg->output_filename, commsize)){
-      perror("ERROR deleting tempfiles\n");      
+      perror("ERROR deleting tempfiles");      
     }
     
     #ifdef DEBUG_TIME

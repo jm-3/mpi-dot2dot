@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "algorithm.h"
+#include "utils.h"
 
 typedef enum {dot, bed} output_format_t;
 
@@ -14,6 +15,7 @@ struct outfile {
 };
 
 struct outfile *output_create (char *filename);
+struct outfile *output_create_tmp (char *filename, int);
 void output_destroy (struct outfile *out);
 void print_header (struct outfile *out);
 void print_TRs_list_toFile (struct outfile *out, char* label, char* sequence, TRs_Result_Bundle* trs_bundle);

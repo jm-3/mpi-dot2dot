@@ -36,6 +36,25 @@ struct outfile *output_create (char *filename) {
   return out;
 }
 
+struct outfile *output_create_tmp (char *output_filename, int rank){
+  char tempOuputFile[MAX_PARAM_LEN+50], *path, *filename, *aux;
+  char ext[20];
+
+  aux = strdup(output_filename);
+  path = dirname(aux);
+  aux = strdup(output_filename);
+  filename = basename(aux);
+  
+  strcpy (ext, get_filename_ext(filename));
+  filename = remove_filename_ext(filename);
+  if(strcmp(ext, "") == 0)
+    strcpy(ext, ".dot");
+
+  sprintf(tempOuputFile,"%s/tmp-%s-%d%s", path, filename, rank, ext);
+  
+  return output_create (tempOuputFile);
+}
+
 void output_destroy (struct outfile *out) {
   if (out == NULL) return;
   if (out->pf != NULL) fclose (out->pf);
@@ -143,19 +162,36 @@ void print_usintArray(unsigned short int* array, int length) {
 }
 
 int merge_files(const char* fullpath, int n) {
-  int reads, writes;
+  int reads, writes, len;
   char buffer[BUFF_SIZE];
-  char tempOuputFile[MAX_PARAM_LEN+50], *path, *filename, *aux;
-  FILE* fp = fopen(fullpath, "w");
+  char outputFile[MAX_PARAM_LEN+50], tempOuputFile[MAX_PARAM_LEN+50], *path, *filename, *aux;
+  char ext[20];
+
+  aux = strdup(fullpath);
+  path = dirname(aux);
+  aux = strdup(fullpath);
+  filename = basename(aux);
+  
+  strcpy (ext, get_filename_ext(filename));
+  filename = remove_filename_ext(filename);
+  if(strcmp(ext, "") == 0)
+    strcpy(ext, ".dot");
+
+  len = strlen (fullpath);
+  if (len < 4) {  /*  cannot have an extension  */
+    sprintf (outputFile, "%s.dot", fullpath);    
+  }else
+    if (strcmp (fullpath + len - 4, ".bed") == 0 || strcmp (fullpath + len - 4, ".dot") == 0) {
+      sprintf (outputFile, "%s", fullpath);    
+    }else
+      sprintf (outputFile, "%s.dot", fullpath);
+  
+
+  FILE* fp = fopen(outputFile, "w");
   if (fp == NULL) return 1;
 
   for (int i = 0; i < n; i++) {
-    aux = strdup(fullpath);    
-    path = dirname(aux);
-    aux = strdup(fullpath);
-    filename = basename(aux);
-    sprintf(tempOuputFile,"%s/tmp-%s-%d.dot",path,filename, i);
-    
+    sprintf(tempOuputFile,"%s/tmp-%s-%d%s",path,filename, i, ext);
 
     FILE* fp_read = fopen(tempOuputFile, "r");
     if (fp_read == NULL) return 1;
@@ -174,14 +210,22 @@ int merge_files(const char* fullpath, int n) {
 }
 
 int remove_tmpfiles(const char* fullpath, int n){
-  char tempOuputFile[MAX_PARAM_LEN+50], *path, *filename, *aux;
+  char tempOuputFile[MAX_PARAM_LEN+70], *path, *filename, *aux;
+  char ext[20];
+
+  aux = strdup(fullpath);
+  path = dirname(aux);
+  aux = strdup(fullpath);
+  filename = basename(aux);
+  
+  strcpy (ext, get_filename_ext(filename));
+  filename = remove_filename_ext(filename);
+  if(strcmp(ext, "") == 0)
+    strcpy(ext, ".dot");
+
   for (int i = 0; i < n; i++) {
-    aux = strdup(fullpath);    
-    path = dirname(aux);
-    aux = strdup(fullpath);
-    filename = basename(aux);      
-    sprintf(tempOuputFile,"%s/tmp-%s-%d.dot",path,filename, i);
-    
+    sprintf(tempOuputFile,"%s/tmp-%s-%d%s", path, filename, i, ext);
+       
     if(remove(tempOuputFile)) return 1;    
  }
  return 0;
