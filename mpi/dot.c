@@ -16,7 +16,7 @@ int main (int argc, char* argv[]) {
   struct outfile *output=NULL;
   struct sequence_t *seq; /*   contains information on the last loaded seq  */
   struct dot_matrix *dm;
-  Dot_input *param;
+  Dot_input *param=NULL;
   int i, res, rank, commsize;
   struct sequences_info * sinfo;  
   struct assigments * assings=NULL;  
@@ -119,22 +119,22 @@ int main (int argc, char* argv[]) {
     fprintf(stderr,"Proc: %d | num_assigs: %u | offset: %ld | size: %lu\n", rank, myassingments, myoffset, mysize);    
   #endif  
 
-  if(fseek (fm->pf, myoffset, SEEK_SET)){
-    fprintf(stderr,"ERROR: fseek(%ld)\n",myoffset);
-    MPI_Abort(MPI_COMM_WORLD, 1);
-  }
-  fm->finish = false;  
-  
-  /* algorithm run attempt */	
-  seq = NULL;
-  if ((param = dot_obj_init(cfg, wm, fm, output, 0)) == NULL) { 
+  if(myassingments > 0){
+    if(fseek (fm->pf, myoffset, SEEK_SET)){
+      fprintf(stderr,"ERROR: fseek(%ld)\n",myoffset);
+      MPI_Abort(MPI_COMM_WORLD, 1);
+    }
+    seq = NULL;
+    if ((param = dot_obj_init(cfg, wm, fm, output, 0)) == NULL) { 
       printf("Error in main() for param pointer\n"); 
       free_weights_matrix (wm);
       free (cfg);  /* free config params struct  */
       filemanager_destroy (fm);  /*  Releasefile managemant resources  */
-      exit (EXIT_FAILURE); 
+      MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE); 
+    }
   }
-
+  fm->finish = false;  
+  
   while(iter < myassingments) {
     #ifdef DEBUG_TIME
       start = MPI_Wtime();
@@ -247,7 +247,7 @@ int main (int argc, char* argv[]) {
     #endif
   }
   
-  destroy_dot_obj(&param);      
+  if(param != NULL) destroy_dot_obj(&param);      
   filemanager_destroy  (fm);
   free_weights_matrix (wm);
   free (cfg);  /* free config params struct  */
