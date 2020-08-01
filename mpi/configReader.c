@@ -243,8 +243,7 @@ void param_list_parser (struct paramList *par_list, struct config *cfg) {
     if (strcmp (elem->param, "maxinsert") == 0) {
       if ((cfg->flags & J_FLAG) == 0) {
 	     cfg->flags += J_FLAG;
-	     cfg->jvalue = atoi (elem->value);
-       printf("cfg->jvalue %d\n",cfg->jvalue);
+	     cfg->jvalue = atoi (elem->value);       
       }
     }
     if (strcmp (elem->param, "maxgaps") == 0) {
@@ -399,8 +398,8 @@ MATCH_ARRAY_TYPE ** loadConfig(int argc, char* argv[], struct config **cfg){
     fprintf(stderr, "MinMotifLen: %d\n", (*cfg)->nvalue);
     fprintf(stderr, "MaxMotifLen: %d\n", (*cfg)->xvalue);
     fprintf(stderr, "MinMatch: %f\n", (*cfg)->fvalue);
-    fprintf(stderr, "MaxGaps: %d\n", (*cfg)->jvalue);
-    fprintf(stderr, "MaxInsert: %d\n", (*cfg)->gvalue);
+    fprintf(stderr, "MaxGaps: %d\n", (*cfg)->gvalue);
+    fprintf(stderr, "MaxInsert: %d\n", (*cfg)->jvalue);
     fprintf(stderr, "Schedule: %s\n", (*cfg)->schedule==BLOCK?"BLOCK":"BALANCED");    
     fprintf(stderr, "FilterType: %s\n", (*cfg)->filter_type==NONE?"NONE":(*cfg)->filter_type==THRESHOLD?"THRESHOLD":(*cfg)->filter_type==LIGHT?"LIGHT":(*cfg)->filter_type==FAIR?"FAIR":(*cfg)->filter_type==HEAVY?"HEAVY":"Wrong value");
     fprintf(stderr, "MinTRLen: %u\n", (*cfg)->min_TR_len);
