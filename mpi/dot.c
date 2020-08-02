@@ -145,7 +145,6 @@ int main (int argc, char* argv[]) {
     if (verbose_output) {
         if (seq != NULL) {
             fprintf (stderr,"Rank %d Processing %s length: %ld bp (%u of %u)\n",rank, seq->label, seq->sequence_size, iter+1, myassingments);
-            fflush (stderr);
         }
     }
     if ( seq == NULL ) {
@@ -162,13 +161,13 @@ int main (int argc, char* argv[]) {
       dm = dot_init (seq, wm);
       if (dm == NULL) {
           perror("Error in creating dot_matrix\n");
-          return 1; 
+          MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE); 
       }
       param->matrix = dm;      
       res = start_TRs_search(param);
       if (res != 0) {
           perror("Something was wrong searching TRs\n");
-          return 1; 
+          MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
       }
       #ifdef DEBUG_TIME
         end = MPI_Wtime();
