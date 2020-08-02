@@ -400,14 +400,13 @@ char* copy_seqPart(int start_index, int length, char* seq) {
 \*****************************************************************************/
 
 
-int getFinalTandemLength (int window_index, int current_match_index, int window_length, int max_length, struct dot_matrix *m) {
+int getFinalTandemLength (int window_index, int current_match_index, int window_length, int max_length, MATCH_ARRAY_TYPE** pointers) {
 	
 	int w_i=window_index, value=0, c_i=current_match_index, final_length=0;
-	char *aux_ptr;
-	while(final_length <= max_length) {
-		aux_ptr = *(m->pointers_sequence + (int)(m->sequence[w_i]));
-		value = aux_ptr[c_i] / 100;
-		if (value == 1) {
+	
+	while(final_length <= max_length) {		
+		value = pointers[w_i][c_i];
+		if (value == 100) {
 			final_length ++;
 			w_i ++;
 			c_i ++;
@@ -522,7 +521,7 @@ int findTandemRepeats(int window_length, int window_index, struct dot_matrix *m,
 		/* Look for part of cut tandem (include decimal exponent) HAMMING DISTANCE */
 		current_match_index -= i;	
 		max_length = (current_match_index+window_length > m->sequence_len) ? (m->sequence_len-current_match_index) : (window_length-1);
-		final_tandem_length=getFinalTandemLength (window_index, current_match_index, window_length, max_length, m);	
+		final_tandem_length=getFinalTandemLength (window_index, current_match_index, window_length, max_length, m->pointers_sequence);	
 		if (final_tandem_length > 0) {
 
 			purity_sum += final_tandem_length;
