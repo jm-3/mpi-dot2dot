@@ -120,7 +120,7 @@ int main (int argc, char* argv[]) {
     }
     seq = NULL;
     if ((param = dot_obj_init(cfg, wm, fm, output, 0)) == NULL) { 
-      printf("Error in main() for param pointer\n"); 
+      fprintf(stderr, "Error in main() for param pointer\n"); 
       free_weights_matrix (wm);
       free (cfg);  /* free config params struct  */
       filemanager_destroy (fm);  /*  Releasefile managemant resources  */
