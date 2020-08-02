@@ -3,7 +3,6 @@
 use strict;
 use Getopt::Long qw(:config pass_through require_order);
 use Config::Auto;
-use constant CONFIGFILE => "/etc/slurm/slanzar.conf";
 use Data::Dumper;
 use Switch;
 require "$ENV{\"LMOD_PKG\"}/init/perl";
@@ -17,9 +16,9 @@ my $short=0;
 my $onlyfaster=0;
 my $family="";
 my $minfamily="";
-my $modules="";
 my $time="";
 my $mpi=0;
+my $jobname="";
 
 GetOptions('help|h' => \$help,
         'cpus-per-task|c=i' => \$numcores,
@@ -29,8 +28,8 @@ GetOptions('help|h' => \$help,
         'use-only-faster-nodes' => \$onlyfaster,
         'family=s' => \$family,
         'min-family=s' => \$minfamily,
-        'with-modules=s' => \$modules,
         'time|t=s' => \$time,
+        'jobname=s' => \$jobname,
         'mpi' => \$mpi);
 showhelp() if $help;
 
@@ -59,7 +58,10 @@ my $SCRIPT=$programname.".slurmscript";
 open(my $fh, '>', $SCRIPT);
 
 print $fh "#!/bin/bash\n";
-print $fh "#SBATCH -J $programname\t# Job name\n";
+if(!$jobname){
+        $jobname=$programname;
+}
+print $fh "#SBATCH -J $jobname\t# Job name\n";
 print $fh "#SBATCH -o $programname.%j.out\t# Name of stdout output file(%j expands to jobId)\n";
 print $fh "#SBATCH -e $programname.%j.err\t# Name of stderr output file(%j expands to jobId)\n";
 if($mpi){
@@ -114,7 +116,6 @@ sub showhelp{
         print "\t\t\ta) por grupos: metis, hermes, kratos, calypso\n";
         print "\t\t\tb) por microarquitectura: cascadelake, skylake, broadwell, haswell, westmere-ep, harpertown\n";
         print "\t\t--min-family : permite seleccionar la familia más antigua de CPUs a usar. Ejemplo: --min-family=kratos podrá usar metis, hermes y kratos, pero no calypso\n";
-        print "\t\t--with-modules : lista separada por comas y sin espacios de modulos necesarios para la ejecucion\n";
         print "\n";
         print "\tEjemplo:\n";
         print "\t\tSolicitar 8 CPUs y 2400 MB de RAM para miprograma llamado con los los argumentos '230 asx'\n";

@@ -121,7 +121,7 @@ for i in "${data[@]}"; do
                 outname="${i}"
                 executable_baseopts="-s $datasetsDir/$i -c $configfile"
                 executable_opts="$PARAMS ${executable_baseopts} $DOTTHREADS"
-                slanzarv $MPIRUN -c $NUMTHREADS $TIME ./dot $executable_opts -o $OUTPUTFILE
+                slanzarv --jobname dot-$NUMTHREADS-$j $MPIRUN -c $NUMTHREADS $TIME ./dot $executable_opts -o $OUTPUTFILE
         done
 done
 
