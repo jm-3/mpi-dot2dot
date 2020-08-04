@@ -216,6 +216,13 @@ int main (int argc, char* argv[]) {
 
   if(rank == 0)
     MPI_Wait(&request, &status);
+  else{
+    int flag;
+    do{
+      sleep(1);
+      MPI_Test(&request, &flag, MPI_STATUS_IGNORE);
+    }while(!flag);
+  }
 
   #ifdef DEBUG_TIME
     end = MPI_Wtime();
