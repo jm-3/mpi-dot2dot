@@ -72,15 +72,15 @@ int main (int argc, char* argv[]) {
     #endif    
     
     if(cfg->schedule == BLOCK){
-      assings = staticSchedule(sinfo, commsize);
       #ifdef DEBUG
         fprintf(stderr, "Using BLOCK Schedule\n");
-      #endif
+      #endif      
+      assings = staticSchedule(sinfo, commsize);
     }else if(cfg->schedule == BALANCED){
-      assings = staticBalancedScheduleEnhanced(sinfo, commsize);
       #ifdef DEBUG
         fprintf(stderr, "Using BALANCED Schedule\n");
-      #endif
+      #endif      
+      assings = staticBalancedScheduleEnhanced(sinfo, commsize);
     }else{
       fprintf(stderr, "Incorrect Schedule Mode\n");      
       MPI_Abort(MPI_COMM_WORLD, 1);

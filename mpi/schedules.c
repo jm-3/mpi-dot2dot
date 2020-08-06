@@ -107,6 +107,10 @@ struct assigments * staticBalancedScheduleEnhanced(struct sequences_info *sinfo,
 	assings->offsets = (long int *) memalloc(sizeof(long int) * commsize, "Error allocating memory for assings->offsets\n");
 	assings->size = (unsigned long int *) memalloc(sizeof(unsigned long int) * commsize, "Error allocating memory for assings->size\n");
 
+	if (sinfo->num_seqs < commsize){
+		fprintf(stderr, "WARNING: Number of secuences (%ld) is lower than number of processes (%d). Some of them will be idle\n", sinfo->num_seqs, commsize);
+	}
+
 	for(i=0; i<sinfo->num_seqs;i++){
 		sumsizes += sinfo->sizes[i];	
 	}
@@ -125,7 +129,7 @@ struct assigments * staticBalancedScheduleEnhanced(struct sequences_info *sinfo,
 		maxnumassigsperproc = (sinfo->num_seqs - counter) / (commsize - i);
 		average = (sumsizes - totalaccum) / (commsize - i);
 		while(counter < sinfo->num_seqs){			
-			if((((accum + sinfo->sizes[counter]) > (average*1.1)) && (accum > average*0.5)) || assings->num_assigs[i] == maxnumassigsperproc){				
+			if((((accum + sinfo->sizes[counter]) > (average*1.1)) && (accum > average*0.8)) || assings->num_assigs[i] == maxnumassigsperproc){				
 				break;
 			}
 			accum += sinfo->sizes[counter];
