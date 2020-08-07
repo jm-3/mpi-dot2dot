@@ -14,3 +14,5 @@ MPI implementation of the algorithm Dot2Dot which is a method for tandem repeats
         - benchmarks.sh: sends jobs to cluster, using slanzarv. Results are stored in path: preffixDir/datasetName/algorithm_version/num_procs/test_number/ . 3 test are performed per each configuration. 
         - getSacctValues.sh: extracts job metrics from sacct. Automatically, it searches recursively for jobs ID and extract the pertinent info
 - mpi: multiprocessor version
+- tests: benchmarks and other tests about performance
+		- lustre: stripe size and count testing over big files
