@@ -103,7 +103,9 @@ int main (int argc, char* argv[]) {
   #endif  
   MPI_Scatter(num_assigs, 1, MPI_UNSIGNED, &myassingments, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
   MPI_Scatter(offsets, 1, MPI_LONG, &myoffset, 1, MPI_LONG, 0, MPI_COMM_WORLD);
-  MPI_Scatter(sizes, 1, MPI_UNSIGNED_LONG, &mysize, 1, MPI_UNSIGNED_LONG, 0, MPI_COMM_WORLD);
+  #ifdef DEBUG
+    MPI_Scatter(sizes, 1, MPI_UNSIGNED_LONG, &mysize, 1, MPI_UNSIGNED_LONG, 0, MPI_COMM_WORLD);
+  #endif
   #ifdef DEBUG_TIME
     end = MPI_Wtime();
     tcomun += end - start;
