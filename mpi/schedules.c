@@ -2,8 +2,7 @@
 
 struct assigments * staticSchedule(struct sequences_info *sinfo, int commsize){
 	struct assigments * assings;	
-	unsigned int i, j, quotient, remainder, counter;
-	long int size, index;
+	unsigned int i, quotient, remainder, counter;
 	
 	assings = assings_init(commsize);
 
@@ -30,16 +29,11 @@ struct assigments * staticSchedule(struct sequences_info *sinfo, int commsize){
 		counter += assings->num_assigs[i];
 	}
 
-	index = 0;
-	for(i=0; i<commsize; i++){
-		size = 0;
-		for(j=0; j<assings->num_assigs[i]; j++){
-			size += sinfo->sizes[index];
-			index++;
-		}
-		assings->size[i] = size;
-
-	}
+	#ifdef DSCHEDULER
+		fprintf(stderr, "Total sequences: %u\n", sinfo->num_seqs);
+		for(i=0; i<commsize; i++)
+			fprintf(stderr, "Rank %d NumAssigs %u\n", i, assings->num_assigs[i]);
+	#endif
 
 	return assings;
 
@@ -93,7 +87,7 @@ struct assigments * staticBalancedSchedule(struct sequences_info *sinfo, int com
 struct assigments * staticBalancedScheduleEnhanced(struct sequences_info *sinfo, int commsize){
 	struct assigments * assings;
 	unsigned int i, counter=0, maxnumassigsperproc;
-	long int off=0, *ranges;
+	long int off=0;
 	long int average, sumsizes=0, accum, totalaccum=0;	
 
 	assings = assings_init(commsize);
@@ -102,17 +96,11 @@ struct assigments * staticBalancedScheduleEnhanced(struct sequences_info *sinfo,
 		fprintf(stderr, "WARNING: Number of secuences (%u) is lower than number of processes (%d). Some of them will be idle\n", sinfo->num_seqs, commsize);
 	}
 
+
 	for(i=0; i<sinfo->num_seqs; i++){
-		sumsizes += sinfo->sizes[i];	
+		sumsizes += sinfo->sizes[i];
 	}
 	
-	average = sumsizes / commsize;
-	maxnumassigsperproc = sinfo->num_seqs / commsize;
-
-	ranges = (long int *) memalloc(sizeof(long int) * sinfo->num_seqs, "Error allocating memory for ranges\n");
-	for(i=0; i<sinfo->num_seqs; i++)
-		ranges[i] = sinfo->sizes[i] - average;
-
 	for(i=0; i<commsize; i++){
 		accum = 0;
 		assings->num_assigs[i] = 0;		
@@ -138,7 +126,7 @@ struct assigments * staticBalancedScheduleEnhanced(struct sequences_info *sinfo,
 		totalaccum += accum;
 	}
 
-	if(verbose_output){
+	#ifdef DSCHEDULER
 		double stddev;
 		unsigned long int min, max;
 		average = sumsizes / commsize;
@@ -148,9 +136,9 @@ struct assigments * staticBalancedScheduleEnhanced(struct sequences_info *sinfo,
 		fprintf(stderr, "Static Balanced Scheduler Enhanced: sum %lu, np %d, average %lu, stddev %.3e, min size: %lu, max size %lu\n", sumsizes, commsize, average, stddev, min, max);
 		fprintf(stderr,"Sizes per proc: ");
 		for(i=0; i<commsize; i++)		
-			fprintf(stderr," %lu", assings->size[i]);
+			fprintf(stderr, "Rank %d NumAssigs %u Size %ld\n", i, assings->num_assigs[i], assings->size[i]);
 		fprintf(stderr,"\n");
-	}
+	#endif
 
 	return assings;
 }

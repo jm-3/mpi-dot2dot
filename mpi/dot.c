@@ -21,7 +21,7 @@ int main (int argc, char* argv[]) {
   struct sequences_info * sinfo;  
   struct assigments * assings=NULL;  
   unsigned int myassingments, iter = 0, *num_assigs=NULL;
-  long int myoffset, *offsets=NULL;  
+  long int myoffset, *offsets=NULL, mysize=0;  
   #ifdef DEBUG_TIME  
     double tread=0, tcomp=0, twrite=0, twait=0, tcomun=0, start, end;
   #endif
@@ -62,7 +62,7 @@ int main (int argc, char* argv[]) {
       start = MPI_Wtime();
     #endif    
 
-    sinfo = filemanager_seq_count(fm);
+    sinfo = filemanager_seq_count(fm, cfg->schedule);
 
     #ifdef DEBUG_TIME
       end = MPI_Wtime();
@@ -110,13 +110,6 @@ int main (int argc, char* argv[]) {
     tcomun += end - start;
   #endif
   
-  #ifdef DEBUG_MPI
-    long int *sizes=NULL, mysize;
-    sizes = assings->size;
-    MPI_Scatter(sizes, 1, MPI_LONG, &mysize, 1, MPI_LONG, 0, MPI_COMM_WORLD);
-    fprintf(stderr,"Proc: %d | num_assigs: %u | offset: %ld | size: %ld\n", rank, myassingments, myoffset, mysize);    
-  #endif  
-
   if(rank == 0) assings_free(assings);
 
   if(myassingments > 0){
@@ -161,6 +154,8 @@ int main (int argc, char* argv[]) {
         break;
     } 
     else {      
+      mysize += seq->sequence_size;
+
       param->sequence = seq->sequence;
       param->IDSeq = seq->label;
 
@@ -212,7 +207,11 @@ int main (int argc, char* argv[]) {
         MPI_Abort(MPI_COMM_WORLD, 1);
   }
 
-  output_destroy (output);  
+  output_destroy (output);
+
+  #ifdef DEBUG
+    fprintf(stderr,"Proc: %d | num_assigs: %u | offset: %ld | size: %ld\n", rank, myassingments, myoffset, mysize);    
+  #endif   
 
   #ifdef DEBUG_TIME
     start = MPI_Wtime();    

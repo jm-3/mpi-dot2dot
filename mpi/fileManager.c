@@ -233,10 +233,10 @@ struct sequence_t *filemanager_next_seq (struct filemanager *fmobj, struct seque
 }
 
 
+
 struct sequences_info * __filemanager_seq_count (struct filemanager *fmobj) {
   char next_char;
   parse_status_t parse_status = H_PRE_SI;
-  int qual_read_char = 0;  /*  Count of the number of caracters read in quality score of fastq */
   int sequences_info_size = SINFO_SIZE;
   struct sequences_info * sinfo;
   long int fileoffset = 0;
@@ -244,7 +244,7 @@ struct sequences_info * __filemanager_seq_count (struct filemanager *fmobj) {
   sinfo = (struct sequences_info *) memalloc(sizeof(struct sequences_info),"Error allocating memory for sequences_info\n");
   sinfo->num_seqs = 0;
   sinfo->offsets = (long int *) memalloc(sizeof(long int)*sequences_info_size,"Error allocating memory for sequences_info->offsets\n");
-  sinfo->sizes = (long int *) memalloc(sizeof(long int)*sequences_info_size,"Error allocating memory for sequences_info->sizes\n");
+  sinfo->sizes = NULL; /* not needed, only number of sequences */
 
   if(fseek (fmobj->pf, 0, SEEK_SET)){
     fprintf(stderr,"ERROR: filemanager_seq_count -> fseek(0) \n");
@@ -275,8 +275,7 @@ struct sequences_info * __filemanager_seq_count (struct filemanager *fmobj) {
 		       parse_status = H_PRE_LABEL;
 		       if(sinfo->num_seqs > sequences_info_size){
 		       	sequences_info_size += SINFO_SIZE; 
-		       	sinfo->offsets = (long int *) memrealloc(sinfo->offsets, sizeof(long int)*sequences_info_size,"Error allocating memory for sequences_info->offsets\n");
-  				sinfo->sizes = (long int *) memrealloc(sinfo->sizes, sizeof(long int)*sequences_info_size,"Error allocating memory for sequences_info->sizes\n");
+		       	sinfo->offsets = (long int *) memrealloc(sinfo->offsets, sizeof(long int)*sequences_info_size,"Error allocating memory for sequences_info->offsets\n");  				
 		       }
 #ifdef DFILEMANAGER
    printf("SECUENCE %d OFFSET %ld\n",sinfo->num_seqs, fileoffset);
@@ -341,8 +340,145 @@ struct sequences_info * __filemanager_seq_count (struct filemanager *fmobj) {
 		         parse_status = FQ_PLUS;
 		         break;
 		       }
+	        default:	        		       
+				break;
+	      	}
+	      break;
+
+	    case FQ_PLUS:
+	      if (next_char == '\n') {parse_status = FQ_SCORE; }
+	      break;
+	    
+	    case FQ_SCORE:
+	      switch (next_char) {
+	      	case '\n':
+	      		parse_status = H_PRE_SI;
+				break;
+	      	default:
+				break;
+	      }
+	      break;
+	    }
+	    fileoffset++;
+  }
+  return sinfo;
+}
+
+
+
+struct sequences_info * __filemanager_seqsize_count (struct filemanager *fmobj) {
+  char next_char;
+  parse_status_t parse_status = H_PRE_SI;
+  int qual_read_char = 0;  /*  Count of the number of caracters read in quality score of fastq */
+  int sequences_info_size = SINFO_SIZE;
+  struct sequences_info * sinfo;
+  long int fileoffset = 0, aux=0;
+
+  sinfo = (struct sequences_info *) memalloc(sizeof(struct sequences_info),"Error allocating memory for sequences_info\n");
+  sinfo->num_seqs = 0;
+  sinfo->offsets = (long int *) memalloc(sizeof(long int)*sequences_info_size,"Error allocating memory for sequences_info->offsets\n");
+  sinfo->sizes = (long int *) memalloc(sizeof(long int)*sequences_info_size,"Error allocating memory for sequences_info->sizes\n");
+
+  if(fseek (fmobj->pf, 0, SEEK_SET)){
+    fprintf(stderr,"ERROR: filemanager_seq_count -> fseek(0) \n");
+    return NULL;
+  }
+  while (1) {
+    if (fmobj->offset == fmobj->buffer_size) {
+      if (feof (fmobj->pf) == 1) {  /*  End of file and end of buffer  */
+	     fmobj->finish = true;
+	     break;
+      }
+      fmobj->offset = 0;
+      fmobj->buffer_size = fread (fmobj->buffer, 1, BUFF_SIZE, fmobj->pf);
+      /*  Check reading error  */
+      if (fmobj->buffer_size < BUFF_SIZE && feof (fmobj->pf) == 0) {
+	     perror ("Error reading input file\n");	     
+	     return NULL;
+      }
+    }
+    next_char = fmobj->buffer[fmobj->offset];
+    fmobj->offset ++;    
+    /*  From here on I process the sequence/header  */
+    switch (parse_status) {
+	    case H_PRE_SI:
+	      switch (next_char) {
+	        case '>':
+	        case '@':
+		       parse_status = H_PRE_LABEL;
+		       if(sinfo->num_seqs > sequences_info_size){
+		       	sequences_info_size += SINFO_SIZE; 
+		       	sinfo->offsets = (long int *) memrealloc(sinfo->offsets, sizeof(long int)*sequences_info_size,"Error allocating memory for sequences_info->offsets\n");
+  				sinfo->sizes = (long int *) memrealloc(sinfo->sizes, sizeof(long int)*sequences_info_size,"Error allocating memory for sequences_info->sizes\n");
+		       }
+#ifdef DFILEMANAGER
+   printf("SECUENCE %d OFFSET %ld\n",sinfo->num_seqs, fileoffset);
+#endif
+		       sinfo->offsets[sinfo->num_seqs] = fileoffset;
+		       sinfo->sizes[sinfo->num_seqs] = 0;
+		       aux = sinfo->num_seqs;
+		       sinfo->num_seqs++;
+		       break;
+	        case ' ':
+		       break;
 	        default:
-	        	sinfo->sizes[sinfo->num_seqs-1] ++;	       
+		       fprintf(stderr,"Input file parsing error\n");	       
+		       return NULL;
+	      }
+	      break;
+
+	    case H_PRE_LABEL:
+	      switch (next_char) {
+	        case '\n':	       
+		       parse_status = SEQUENCE;
+		       break;
+	        case ' ':
+		       break;
+	        default:
+		       parse_status = H_LABEL;
+		       fmobj->offset --;  /*  Reprocess this caracter  */
+		       fileoffset--;
+		       break;
+	      }
+	      break;
+
+	    case H_LABEL:
+	      switch (next_char) {
+	      case '\n':
+		     parse_status = SEQUENCE;
+		     break;
+	      case ' ':
+		/*  without break to allow spaces in fastq (instead trim in fasta)  */
+		     if (fmobj->filetype == FASTA) parse_status = H_POST_LABEL;
+	      default:	     
+		     break;
+	      }
+	      break;
+
+	    case H_POST_LABEL:
+	      if (next_char == '\n') parse_status = SEQUENCE;
+	      break;
+	    
+	    case SEQUENCE:
+	      switch (next_char) {
+	        case ' ':
+		       break;
+	        case '\n':
+	        	break;
+	        case '>':  /*  No break because in fastq the caracter is evaluated  */
+		       if (fmobj->filetype == FASTA) {
+		         fmobj->offset --;  /*  Reprocess this caracter  */
+		       	 fileoffset--;
+		         parse_status = H_PRE_SI;
+		         break;	         
+		       }
+	        case '+':  /*  No break because in fasta the caracter is evaluated  */
+		       if (fmobj->filetype == FASTQ) {
+		         parse_status = FQ_PLUS;
+		         break;
+		       }
+	        default:	        	
+	        	sinfo->sizes[aux]++;		        	     
 				break;
 	      	}
 	      break;
@@ -357,7 +493,7 @@ struct sequences_info * __filemanager_seq_count (struct filemanager *fmobj) {
 	      		parse_status = H_PRE_SI;
 				break;
 	      	case '@':  /*  without break - if it is not the new element it is part of the score  */
-				if (qual_read_char >= sinfo->sizes[sinfo->num_seqs-1]) {
+				if (qual_read_char >= sinfo->sizes[aux]) {
 		  			fmobj->offset --;  /*  Reprocess this caracter  */
 		  			fileoffset--;	  
 		  			parse_status = H_PRE_SI;
@@ -375,9 +511,15 @@ struct sequences_info * __filemanager_seq_count (struct filemanager *fmobj) {
 
 
 
-struct sequences_info * filemanager_seq_count(struct filemanager *fmobj){
-  if (fmobj->filetype == FASTQ || fmobj->filetype == FASTA) 
-    return __filemanager_seq_count (fmobj);
+struct sequences_info * filemanager_seq_count(struct filemanager *fmobj, schedule_t schedule){
+  if (fmobj->filetype == FASTQ || fmobj->filetype == FASTA){
+  	if(schedule==BLOCK){
+    	return __filemanager_seq_count (fmobj);
+  	}
+    else if(schedule==BALANCED){
+    	return __filemanager_seqsize_count (fmobj);
+    }
+ }
   return NULL;	
 }
 
