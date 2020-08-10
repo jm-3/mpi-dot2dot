@@ -5,10 +5,7 @@ struct assigments * staticSchedule(struct sequences_info *sinfo, int commsize){
 	int i, j, quotient, remainder, counter;
 	long int size, index;
 	
-	assings = (struct assigments *) memalloc(sizeof(struct assigments), "Error allocating memory for struct assigments\n");
-	assings->num_assigs = (unsigned int *) memalloc(sizeof(unsigned int) * commsize, "Error allocating memory for assings->num_assigs\n");
-	assings->offsets = (long int *) memalloc(sizeof(long int) * commsize, "Error allocating memory for assings->offsets\n");
-	assings->size = (long int *) memalloc(sizeof(long int) * commsize, "Error allocating memory for assings->size\n");
+	assings = assings_init(commsize);
 
 	quotient = sinfo->num_seqs / commsize;
 	if(quotient == 0)
@@ -54,10 +51,7 @@ struct assigments * staticBalancedSchedule(struct sequences_info *sinfo, int com
 	long int off=0;
 	unsigned long int quotient, sumsizes=0, accum;
 
-	assings = (struct assigments *) memalloc(sizeof(struct assigments), "Error allocating memory for struct assigments\n");
-	assings->num_assigs = (unsigned int *) memalloc(sizeof(unsigned int) * commsize, "Error allocating memory for assings->num_assigs\n");
-	assings->offsets = (long int *) memalloc(sizeof(long int) * commsize, "Error allocating memory for assings->offsets\n");
-	assings->size = (long int *) memalloc(sizeof(long int) * commsize, "Error allocating memory for assings->size\n");
+	assings = assings_init(commsize);
 
 	for(i=0; i<sinfo->num_seqs;i++){
 		sumsizes += sinfo->sizes[i];		
@@ -102,10 +96,7 @@ struct assigments * staticBalancedScheduleEnhanced(struct sequences_info *sinfo,
 	long int off=0, *ranges;
 	long int average, sumsizes=0, accum, totalaccum=0;	
 
-	assings = (struct assigments *) memalloc(sizeof(struct assigments), "Error allocating memory for struct assigments\n");
-	assings->num_assigs = (unsigned int *) memalloc(sizeof(unsigned int) * commsize, "Error allocating memory for assings->num_assigs\n");
-	assings->offsets = (long int *) memalloc(sizeof(long int) * commsize, "Error allocating memory for assings->offsets\n");
-	assings->size = (long int *) memalloc(sizeof(long int) * commsize, "Error allocating memory for assings->size\n");
+	assings = assings_init(commsize);
 
 	if (sinfo->num_seqs < commsize){
 		fprintf(stderr, "WARNING: Number of secuences (%ld) is lower than number of processes (%d). Some of them will be idle\n", sinfo->num_seqs, commsize);
@@ -162,4 +153,23 @@ struct assigments * staticBalancedScheduleEnhanced(struct sequences_info *sinfo,
 	}
 
 	return assings;
+}
+
+
+struct assigments * assings_init(int n){
+	struct assigments *a;
+
+	a = (struct assigments *) memalloc(sizeof(struct assigments), "Error allocating memory for struct assigments\n");
+	a->num_assigs = (unsigned int *) memalloc(sizeof(unsigned int) * n, "Error allocating memory for assings->num_assigs\n");
+	a->offsets = (long int *) memalloc(sizeof(long int) * n, "Error allocating memory for assings->offsets\n");
+	a->size = (long int *) memalloc(sizeof(long int) * n, "Error allocating memory for assings->size\n");
+
+	return a;
+}
+
+void assings_free(struct assigments *a){
+	if(a->num_assigs != NULL) free(a->num_assigs);
+	if(a->offsets != NULL) free(a->offsets);
+	if(a->size != NULL) free(a->size);
+	
 }

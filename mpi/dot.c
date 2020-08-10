@@ -117,6 +117,8 @@ int main (int argc, char* argv[]) {
     fprintf(stderr,"Proc: %d | num_assigs: %u | offset: %ld | size: %ld\n", rank, myassingments, myoffset, mysize);    
   #endif  
 
+  if(rank == 0) assings_free(assings);
+
   if(myassingments > 0){
     if(fseek (fm->pf, myoffset, SEEK_SET)){
       fprintf(stderr,"ERROR: fseek(%ld)\n",myoffset);

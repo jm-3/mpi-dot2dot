@@ -15,5 +15,7 @@ struct assigments
 struct assigments * staticSchedule(struct sequences_info *, int);
 struct assigments * staticBalancedSchedule(struct sequences_info *, int);
 struct assigments * staticBalancedScheduleEnhanced(struct sequences_info *, int);
+struct assigments * assings_init(int n);
+void assings_free(struct assigments *a);
 
 #endif
