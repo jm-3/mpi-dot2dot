@@ -323,6 +323,7 @@ struct sequences_info * __filemanager_seq_count (struct filemanager *fmobj) {
 	    case H_POST_LABEL:
 	      if (next_char == '\n') parse_status = SEQUENCE;
 	      break;
+	    
 	    case SEQUENCE:
 	      switch (next_char) {
 	        case ' ':
@@ -332,7 +333,7 @@ struct sequences_info * __filemanager_seq_count (struct filemanager *fmobj) {
 	        case '>':  /*  No break because in fastq the caracter is evaluated  */
 		       if (fmobj->filetype == FASTA) {
 		         fmobj->offset --;  /*  Reprocess this caracter  */
-		       	fileoffset--;
+		       	 fileoffset--;
 		         parse_status = H_PRE_SI;	         
 		       }
 	        case '+':  /*  No break because in fasta the caracter is evaluated  */
@@ -343,15 +344,17 @@ struct sequences_info * __filemanager_seq_count (struct filemanager *fmobj) {
 	        default:
 	        	sinfo->sizes[sinfo->num_seqs-1] ++;	       
 				break;
-	      }
+	      	}
 	      break;
 
 	    case FQ_PLUS:
-	      if (next_char == '\n') parse_status = FQ_SCORE;
+	      if (next_char == '\n') {parse_status = FQ_SCORE; qual_read_char=0; }
 	      break;
+	    
 	    case FQ_SCORE:
 	      switch (next_char) {
 	      	case '\n':
+	      		parse_status = H_PRE_SI;
 				break;
 	      	case '@':  /*  without break - if it is not the new element it is part of the score  */
 				if (qual_read_char >= sinfo->sizes[sinfo->num_seqs-1]) {
