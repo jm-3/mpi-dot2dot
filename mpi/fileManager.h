@@ -41,7 +41,7 @@ struct sequence_t *filemanager_next_seq (struct filemanager *fmobj, struct seque
 
 #define SINFO_SIZE 5000
 struct sequences_info {
-  long int num_seqs;
+  unsigned int num_seqs;
   long int * offsets;
   long int * sizes;
 };

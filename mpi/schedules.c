@@ -2,14 +2,14 @@
 
 struct assigments * staticSchedule(struct sequences_info *sinfo, int commsize){
 	struct assigments * assings;	
-	int i, j, quotient, remainder, counter;
+	unsigned int i, j, quotient, remainder, counter;
 	long int size, index;
 	
 	assings = assings_init(commsize);
 
 	quotient = sinfo->num_seqs / commsize;
 	if(quotient == 0)
-		fprintf(stderr, "WARNING: Number of secuences (%ld) is lower than number of processes (%d). Some of them will be idle\n", sinfo->num_seqs, commsize);
+		fprintf(stderr, "WARNING: Number of secuences (%u) is lower than number of processes (%d). Some of them will be idle\n", sinfo->num_seqs, commsize);
 
 	for(i=0; i<commsize; i++){
 		assings->num_assigs[i] = quotient;
@@ -99,10 +99,10 @@ struct assigments * staticBalancedScheduleEnhanced(struct sequences_info *sinfo,
 	assings = assings_init(commsize);
 
 	if (sinfo->num_seqs < commsize){
-		fprintf(stderr, "WARNING: Number of secuences (%ld) is lower than number of processes (%d). Some of them will be idle\n", sinfo->num_seqs, commsize);
+		fprintf(stderr, "WARNING: Number of secuences (%u) is lower than number of processes (%d). Some of them will be idle\n", sinfo->num_seqs, commsize);
 	}
 
-	for(i=0; i<sinfo->num_seqs;i++){
+	for(i=0; i<sinfo->num_seqs; i++){
 		sumsizes += sinfo->sizes[i];	
 	}
 	
