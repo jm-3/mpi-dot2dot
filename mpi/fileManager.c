@@ -244,7 +244,7 @@ struct sequences_info * __filemanager_seq_count (struct filemanager *fmobj) {
   sinfo = (struct sequences_info *) memalloc(sizeof(struct sequences_info),"Error allocating memory for sequences_info\n");
   sinfo->num_seqs = 0;
   sinfo->offsets = (long int *) memalloc(sizeof(long int)*sequences_info_size,"Error allocating memory for sequences_info->offsets\n");
-  sinfo->sizes = (unsigned long int *) memalloc(sizeof(unsigned long int)*sequences_info_size,"Error allocating memory for sequences_info->sizes\n");
+  sinfo->sizes = (long int *) memalloc(sizeof(long int)*sequences_info_size,"Error allocating memory for sequences_info->sizes\n");
 
   if(fseek (fmobj->pf, 0, SEEK_SET)){
     fprintf(stderr,"ERROR: filemanager_seq_count -> fseek(0) \n");
@@ -276,7 +276,7 @@ struct sequences_info * __filemanager_seq_count (struct filemanager *fmobj) {
 		       if(sinfo->num_seqs > sequences_info_size){
 		       	sequences_info_size += SINFO_SIZE; 
 		       	sinfo->offsets = (long int *) memrealloc(sinfo->offsets, sizeof(long int)*sequences_info_size,"Error allocating memory for sequences_info->offsets\n");
-  				sinfo->sizes = (unsigned long int *) memrealloc(sinfo->sizes, sizeof(unsigned long int)*sequences_info_size,"Error allocating memory for sequences_info->sizes\n");
+  				sinfo->sizes = (long int *) memrealloc(sinfo->sizes, sizeof(long int)*sequences_info_size,"Error allocating memory for sequences_info->sizes\n");
 		       }
 #ifdef DFILEMANAGER
    printf("SECUENCE %d OFFSET %ld\n",sinfo->num_seqs, fileoffset);
@@ -379,4 +379,10 @@ struct sequences_info * filemanager_seq_count(struct filemanager *fmobj){
   if (fmobj->filetype == FASTQ || fmobj->filetype == FASTA) 
     return __filemanager_seq_count (fmobj);
   return NULL;	
+}
+
+
+void sequences_info_free(struct sequences_info *s){
+	if(s->offsets != NULL) free(s->offsets);
+	if(s->sizes != NULL) free(s->sizes);
 }

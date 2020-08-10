@@ -9,7 +9,7 @@ struct assigments
 {
 	unsigned int * num_assigs;
 	long int * offsets;
-	unsigned long int * size;
+	long int * size;
 };
 
 struct assigments * staticSchedule(struct sequences_info *, int);

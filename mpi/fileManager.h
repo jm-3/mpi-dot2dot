@@ -41,12 +41,13 @@ struct sequence_t *filemanager_next_seq (struct filemanager *fmobj, struct seque
 
 #define SINFO_SIZE 5000
 struct sequences_info {
-  unsigned long int num_seqs;
+  long int num_seqs;
   long int * offsets;
-  unsigned long int * sizes;
+  long int * sizes;
 };
 
 struct sequences_info * filemanager_seq_count(struct filemanager *fmobj);
+void sequences_info_free(struct sequences_info *);
 
 
 #endif /* FILEMANAGER_H_ */

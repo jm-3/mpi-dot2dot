@@ -67,7 +67,7 @@ void * memrealloc(void *ptr, size_t size, char *msg){
   return aux;
 }
 
-double calcStdDev(unsigned long int *values, int n){
+double calcStdDevli(long int *values, int n){
   double sigma=0.0, sum=0.0, average;
   int i;
 
@@ -82,7 +82,7 @@ double calcStdDev(unsigned long int *values, int n){
   return sqrt(sigma/n);
 }
 
-unsigned long int getMinValue(unsigned long int *values, int n){
+long int getMinValueli(long int *values, int n){
   unsigned long int min;
   int i;
 
@@ -95,18 +95,7 @@ unsigned long int getMinValue(unsigned long int *values, int n){
   return min;
 }
 
-unsigned long int getMaxValue(unsigned long int *values, int n){
-  unsigned long int max;
-  int i;
 
-  max = values[0];
-
-  for(i=1; i<n; i++)
-    if(values[i] > max)
-      max = values [i];
-
-  return max;
-}
 
 long int getMaxValueli(long int *values, int n){
   long int max;

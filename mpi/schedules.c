@@ -3,12 +3,12 @@
 struct assigments * staticSchedule(struct sequences_info *sinfo, int commsize){
 	struct assigments * assings;	
 	int i, j, quotient, remainder, counter;
-	unsigned long int size, index;
+	long int size, index;
 	
 	assings = (struct assigments *) memalloc(sizeof(struct assigments), "Error allocating memory for struct assigments\n");
 	assings->num_assigs = (unsigned int *) memalloc(sizeof(unsigned int) * commsize, "Error allocating memory for assings->num_assigs\n");
 	assings->offsets = (long int *) memalloc(sizeof(long int) * commsize, "Error allocating memory for assings->offsets\n");
-	assings->size = (unsigned long int *) memalloc(sizeof(unsigned long int) * commsize, "Error allocating memory for assings->size\n");
+	assings->size = (long int *) memalloc(sizeof(long int) * commsize, "Error allocating memory for assings->size\n");
 
 	quotient = sinfo->num_seqs / commsize;
 	if(quotient == 0)
@@ -57,7 +57,7 @@ struct assigments * staticBalancedSchedule(struct sequences_info *sinfo, int com
 	assings = (struct assigments *) memalloc(sizeof(struct assigments), "Error allocating memory for struct assigments\n");
 	assings->num_assigs = (unsigned int *) memalloc(sizeof(unsigned int) * commsize, "Error allocating memory for assings->num_assigs\n");
 	assings->offsets = (long int *) memalloc(sizeof(long int) * commsize, "Error allocating memory for assings->offsets\n");
-	assings->size = (unsigned long int *) memalloc(sizeof(unsigned long int) * commsize, "Error allocating memory for assings->size\n");
+	assings->size = (long int *) memalloc(sizeof(long int) * commsize, "Error allocating memory for assings->size\n");
 
 	for(i=0; i<sinfo->num_seqs;i++){
 		sumsizes += sinfo->sizes[i];		
@@ -87,9 +87,9 @@ struct assigments * staticBalancedSchedule(struct sequences_info *sinfo, int com
 	if(verbose_output){
 		double stddev;
 		unsigned long int min, max;
-		stddev = calcStdDev(assings->size, commsize);
-		min = getMinValue(assings->size, commsize);
-		max = getMaxValue(assings->size, commsize);
+		stddev = calcStdDevli(assings->size, commsize);
+		min = getMinValueli(assings->size, commsize);
+		max = getMaxValueli(assings->size, commsize);
 		fprintf(stderr, "Static Balanced Scheduler: sum %lu, np %d, average %lu, stddev %.3lf, min size: %lu, max size %lu\n", sumsizes, commsize, quotient, stddev, min, max);		
 	}
 
@@ -99,13 +99,13 @@ struct assigments * staticBalancedSchedule(struct sequences_info *sinfo, int com
 struct assigments * staticBalancedScheduleEnhanced(struct sequences_info *sinfo, int commsize){
 	struct assigments * assings;
 	unsigned int i, counter=0, maxnumassigsperproc;
-	long int off=0, *ranges, maxrange;
-	unsigned long int average, sumsizes=0, accum, totalaccum=0;	
+	long int off=0, *ranges;
+	long int average, sumsizes=0, accum, totalaccum=0;	
 
 	assings = (struct assigments *) memalloc(sizeof(struct assigments), "Error allocating memory for struct assigments\n");
 	assings->num_assigs = (unsigned int *) memalloc(sizeof(unsigned int) * commsize, "Error allocating memory for assings->num_assigs\n");
 	assings->offsets = (long int *) memalloc(sizeof(long int) * commsize, "Error allocating memory for assings->offsets\n");
-	assings->size = (unsigned long int *) memalloc(sizeof(unsigned long int) * commsize, "Error allocating memory for assings->size\n");
+	assings->size = (long int *) memalloc(sizeof(long int) * commsize, "Error allocating memory for assings->size\n");
 
 	if (sinfo->num_seqs < commsize){
 		fprintf(stderr, "WARNING: Number of secuences (%ld) is lower than number of processes (%d). Some of them will be idle\n", sinfo->num_seqs, commsize);
@@ -121,7 +121,6 @@ struct assigments * staticBalancedScheduleEnhanced(struct sequences_info *sinfo,
 	ranges = (long int *) memalloc(sizeof(long int) * sinfo->num_seqs, "Error allocating memory for ranges\n");
 	for(i=0; i<sinfo->num_seqs; i++)
 		ranges[i] = sinfo->sizes[i] - average;
-	maxrange = getMaxValueli(ranges, sinfo->num_seqs);
 
 	for(i=0; i<commsize; i++){
 		accum = 0;
@@ -152,9 +151,9 @@ struct assigments * staticBalancedScheduleEnhanced(struct sequences_info *sinfo,
 		double stddev;
 		unsigned long int min, max;
 		average = sumsizes / commsize;
-		stddev = calcStdDev(assings->size, commsize);
-		min = getMinValue(assings->size, commsize);
-		max = getMaxValue(assings->size, commsize);
+		stddev = calcStdDevli(assings->size, commsize);
+		min = getMinValueli(assings->size, commsize);
+		max = getMaxValueli(assings->size, commsize);
 		fprintf(stderr, "Static Balanced Scheduler Enhanced: sum %lu, np %d, average %lu, stddev %.3e, min size: %lu, max size %lu\n", sumsizes, commsize, average, stddev, min, max);
 		fprintf(stderr,"Sizes per proc: ");
 		for(i=0; i<commsize; i++)		

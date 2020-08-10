@@ -21,7 +21,6 @@ int main (int argc, char* argv[]) {
   struct sequences_info * sinfo;  
   struct assigments * assings=NULL;  
   unsigned int myassingments, iter = 0, *num_assigs=NULL;
-  unsigned long int *sizes=NULL, mysize;  
   long int myoffset, *offsets=NULL;  
   #ifdef DEBUG_TIME  
     double tread=0, tcomp=0, twrite=0, twait=0, tcomun=0, start, end;
@@ -86,9 +85,11 @@ int main (int argc, char* argv[]) {
       MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
+    sequences_info_free(sinfo);
+
     num_assigs = assings->num_assigs;
     offsets = assings->offsets;
-    sizes = assings->size;
+    
     print_header(output);
 
     #ifdef DEBUG_TIME
@@ -103,16 +104,17 @@ int main (int argc, char* argv[]) {
   #endif  
   MPI_Scatter(num_assigs, 1, MPI_UNSIGNED, &myassingments, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
   MPI_Scatter(offsets, 1, MPI_LONG, &myoffset, 1, MPI_LONG, 0, MPI_COMM_WORLD);
-  #ifdef DEBUG
-    MPI_Scatter(sizes, 1, MPI_UNSIGNED_LONG, &mysize, 1, MPI_UNSIGNED_LONG, 0, MPI_COMM_WORLD);
-  #endif
+  
   #ifdef DEBUG_TIME
     end = MPI_Wtime();
     tcomun += end - start;
   #endif
   
-  #ifdef DEBUG
-    fprintf(stderr,"Proc: %d | num_assigs: %u | offset: %ld | size: %lu\n", rank, myassingments, myoffset, mysize);    
+  #ifdef DEBUG_MPI
+    long int *sizes=NULL, mysize;
+    sizes = assings->size;
+    MPI_Scatter(sizes, 1, MPI_LONG, &mysize, 1, MPI_LONG, 0, MPI_COMM_WORLD);
+    fprintf(stderr,"Proc: %d | num_assigs: %u | offset: %ld | size: %ld\n", rank, myassingments, myoffset, mysize);    
   #endif  
 
   if(myassingments > 0){
