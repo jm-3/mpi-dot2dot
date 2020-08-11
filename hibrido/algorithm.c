@@ -799,10 +799,7 @@ int start_TRs_search (Dot_input* param) {
 		printf("\tTRS_BUNDLE of %d FILTERED\n", window_index);
 #endif
 		
-		if ( last_tandem_found->motif_lengths_offset == 0 ) {/* Tandem not found */
-			//window_index++; 
-		} else {
-			
+		if ( last_tandem_found->motif_lengths_offset != 0 ) {/* Tandem found */
 		  /*Insert the tandem as it is the first found	 */
 			if (previous_window_tandem->motif_lengths_offset == 0) {
 #ifdef DEBUG_ALG
