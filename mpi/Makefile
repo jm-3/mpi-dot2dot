@@ -1,5 +1,5 @@
 CC = mpicc 
-CFLAGS = -O3 -finline-functions -fomit-frame-pointer -funroll-loops -Wall -pedantic -lm -DSCHEDULER 
+CFLAGS = -O3 -finline-functions -fomit-frame-pointer -funroll-loops -Wall -pedantic -lm -D DEBUG 
 
 HEADERS = $(wildcard *.h)
 SOURCES = $(wildcard *.c)

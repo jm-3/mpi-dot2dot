@@ -163,9 +163,11 @@ void print_usintArray(unsigned short int* array, int length) {
 
 int merge_files(const char* fullpath, int n) {
   int reads, writes, len;
-  char buffer[BUFF_SIZE];
+  char *buffer;
   char outputFile[MAX_PARAM_LEN+50], tempOuputFile[MAX_PARAM_LEN+50], *path, *filename, *aux;
   char ext[20];
+
+  buffer = (char *) memalloc(sizeof(char) * BUFF_SIZE, "Error allocating memory for buffer\n");
 
   aux = strdup(fullpath);
   path = dirname(aux);

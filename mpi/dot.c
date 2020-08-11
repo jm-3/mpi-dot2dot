@@ -126,6 +126,7 @@ int main (int argc, char* argv[]) {
       MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE); 
     }
   }
+  
   fm->finish = false;  
   
   while(iter < myassingments) {
