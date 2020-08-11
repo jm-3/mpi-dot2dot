@@ -1,5 +1,5 @@
 CC = mpicc 
-CFLAGS = -O3 -finline-functions -fomit-frame-pointer -funroll-loops -Wall -pedantic -lm -D DEBUG 
+CFLAGS = -O3 -finline-functions -fomit-frame-pointer -funroll-loops -Wall -pedantic -lm -D DEBUG -fopenmp 
 
 HEADERS = $(wildcard *.h)
 SOURCES = $(wildcard *.c)
@@ -10,7 +10,7 @@ exe = dot
 all: .depend $(OBJECTS) $(exe)
 
 dot: $(OBJECTS)
-	$(CC) $(OBJECTS) -lm -o $(exe) 
+	$(CC) $(OBJECTS) -fopenmp -lm -o $(exe) 
 
 .PHONY: clean 
 
