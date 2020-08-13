@@ -9,8 +9,8 @@ int start_TRs_search (Dot_input* param) {
 	struct dot_matrix *m = param->matrix;
 	struct config *cfg = param->config_params;
 	result_findTR *current_result;	
-	TRs_Result_Bundle *trs_current_bundle, *last_tandem_found, *previous_window_tandem;
-	int error=0, insert_result;
+	TRs_Result_Bundle *trs_current_bundle, *last_tandem_found, *previous_window_tandem, *trs_thread_bundle, **trs_global_bundle;
+	int error=0, insert_result, tid, num_threads, i;
 
 	if ((cfg->fvalue < 0) || (cfg->fvalue > 1)) {
 		printf ("MinMatch ranges in [0,1]\n");
@@ -42,23 +42,24 @@ int start_TRs_search (Dot_input* param) {
 		window_length = cfg->nvalue; 
 	}
 
-	window_index=0;   
-	window_end=m->sequence_len; 
-
-
+	
 	if (cfg->jvalue < 0) {
 		printf ("MaxInsert cannot be negative\n");
 		return 1;
 	}
 
-	#pragma omp parallel default(none) shared(window_end, cfg, m, gaps_limit, max_length_flag, param) \
+	num_threads = omp_get_num_threads();
+	trs_global_bundle = (TRs_Result_Bundle **) malloc(sizeof(TRs_Result_Bundle *)*num_threads);
+
+	window_end=m->sequence_len;
+
+	#pragma omp parallel default(none) shared(window_end, cfg, m, gaps_limit, max_length_flag, trs_global_bundle) \
 		private(current_result, trs_current_bundle, previous_window_tandem, last_tandem_found, window_length_max, biggest_full_length, minThresholdByPercentage, \
-			minThresholdByGaps, minThreshold, jumps_limit, insert_result) \
+			minThresholdByGaps, minThreshold, jumps_limit, insert_result, trs_thread_bundle, tid) \
 		firstprivate(window_length) reduction(+:error)  
 	{
-		#ifdef DEBUG_ALG
-			int tid = omp_get_thread_num();
-		#endif
+		tid = omp_get_thread_num();
+		
 
 		if ((current_result = init_result_struct()) == NULL) {
 			perror ("Error in start_TRs_search() for current_result initialization\n");
@@ -70,6 +71,12 @@ int start_TRs_search (Dot_input* param) {
 			perror("Error in initializing trs_current_bundle\n");
 			error = 1;
 			window_end = 0; /* terminate all threads */
+		}
+
+		if (( trs_thread_bundle = init_TRs_Bundle(RESIZE_TRS_AMOUNT, RESIZE_MOTIFS_AMOUNT) ) == NULL) {
+			perror("Error in initializing trs_thread_bundle\n");
+			error = 1;
+			window_end = 0; /* terminate all threads */			
 		}
 
 		if (( previous_window_tandem = init_TRs_Bundle( 1, RESIZE_TR_MOTIFS_AMOUNT ) ) == NULL) {
@@ -132,7 +139,8 @@ int start_TRs_search (Dot_input* param) {
 					case (TR_FOUND) : { 
 						window_length ++;
 						/* Put all the TRs with the same window_index in the TRs_Bundle_list and check which is the highest length */
-						if (current_result->resulted_TR->TRs_found[0].full_length > biggest_full_length) biggest_full_length = current_result->resulted_TR->TRs_found[0].full_length;
+						if (current_result->resulted_TR->TRs_found[0].full_length > biggest_full_length) 
+							biggest_full_length = current_result->resulted_TR->TRs_found[0].full_length;
 						if (insert_TRresult_inBundle(trs_current_bundle, current_result->resulted_TR, RESIZE_TR_BUNDLE_AMOUNT, RESIZE_TR_MOTIFS_AMOUNT)) {
 							perror("Error in inserting the current result in the TRs bundle\n");
 							error = 1;
@@ -155,7 +163,7 @@ int start_TRs_search (Dot_input* param) {
 			
 			/* Apply Expansion Filter to the TRs list of the same zone (same Window_index)*/
 			/*last_tandem_found is NULL or has a valid TR to compare to the previous one */
-			expansion_filter(trs_current_bundle, last_tandem_found, biggest_full_length, cfg->tollerance);
+			expansion_filter(trs_current_bundle, last_tandem_found, biggest_full_length, cfg->tollerance); /* nos quedamos con la TR más larga */
 			#ifdef DEBUG_ALG
 				printf("\tThread %d: TRS_BUNDLE of %d FILTERED\n", tid, window_index);
 			#endif
@@ -166,10 +174,8 @@ int start_TRs_search (Dot_input* param) {
 					#ifdef DEBUG_ALG
 						printf("\tThread %d: TRS WINDOW INDEX PREVIUOS WITH 0 COPY NUMBER:%d\n", tid, window_index);
 					#endif
-					#pragma omp critical
-					{
-						insert_result = insert_TRresult_inBundle(param->TRs_bundle , last_tandem_found, RESIZE_TRS_AMOUNT, RESIZE_MOTIFS_AMOUNT);
-					}
+					
+					insert_result = insert_TRresult_inBundle(trs_thread_bundle , last_tandem_found, RESIZE_TRS_AMOUNT, RESIZE_MOTIFS_AMOUNT);
 					if (insert_result) {
 						perror("Error in inserting the current result in the TRs bundle\n");
 						error = 1;
@@ -192,10 +198,8 @@ int start_TRs_search (Dot_input* param) {
 							switch (m->mask[window_index]) {
 								case (UNCHECKED) : {
 									/* tandem has not been checked before */
-									#pragma omp critical
-									{
-										insert_result = insert_TRresult_inBundle(param->TRs_bundle , last_tandem_found, RESIZE_TRS_AMOUNT, RESIZE_MOTIFS_AMOUNT);
-									} 				
+									
+									insert_result = insert_TRresult_inBundle(trs_thread_bundle , last_tandem_found, RESIZE_TRS_AMOUNT, RESIZE_MOTIFS_AMOUNT);	
 									if (insert_result) {
 										perror("Error in inserting the current result in the TRs bundle\n");
 										error = 1;
@@ -216,10 +220,8 @@ int start_TRs_search (Dot_input* param) {
 						#ifdef DEBUG_ALG
 							printf("\tThread %d: TRS WINDOW INDEX INTERSECTED:%d\n", tid, window_index);				
 						#endif
-						#pragma omp critical
-						{
-							insert_result = insert_TRresult_inBundle(param->TRs_bundle , last_tandem_found, RESIZE_TRS_AMOUNT, RESIZE_MOTIFS_AMOUNT);	
-						}
+
+						insert_result = insert_TRresult_inBundle(trs_thread_bundle , last_tandem_found, RESIZE_TRS_AMOUNT, RESIZE_MOTIFS_AMOUNT);	
 						if (insert_result) {
 							perror("Error in inserting the current result in the TRs bundle\n");
 							error = 1;
@@ -244,9 +246,15 @@ int start_TRs_search (Dot_input* param) {
 		destroy_TRs_Bundle(&previous_window_tandem);
 		destroy_result_struct(&current_result);
 		destroy_TRs_Bundle(&trs_current_bundle);
-	}
 
-	//sort_TRs_Bundle();
+		trs_global_bundle[tid] = trs_thread_bundle;
+	} // end omp parallel
+
+
+	for(i=0; i<num_threads; i++){		
+		insert_TRresult_inBundle(param->TRs_bundle, &(trs_global_bundle[i][0]), RESIZE_TRS_AMOUNT, RESIZE_MOTIFS_AMOUNT);
+		destroy_TRs_Bundle(&(trs_global_bundle[i]));
+	}
 
 	return error;
 }

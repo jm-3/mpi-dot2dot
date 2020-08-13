@@ -585,6 +585,7 @@ void expansion_filter(TRs_Result_Bundle* TRs_bundle, TRs_Result_Bundle* last_tan
 			printf("\t|-- Exp Filter --> There is one or more TRs: %lu\n", tot_trs_left);		
 #endif	
 			
+			// encuentra max_score
 			for ( i = 0; i < TRs_bundle->trs_found_offset; ++i ) {
 				current_score = (float) results[i].full_length/(float)biggest_full_length + results[i].purity_percentage;
 				if (current_score > max_score) max_score = current_score;
