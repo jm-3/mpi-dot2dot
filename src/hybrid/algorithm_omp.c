@@ -1,6 +1,8 @@
 #include "algorithm.h"
 #include <omp.h>
 
+int merge_partital_TRresult(TRs_Result_Bundle *dest, TRs_Result_Bundle **trs_global_bundle, int nthreads, struct dot_matrix *m);
+
 int start_TRs_search (Dot_input* param) {
 	int window_length, window_length_max, window_index, window_end, max_length_flag, 
 		jumps_limit=0, gaps_limit=0, biggest_full_length=0;
@@ -10,7 +12,7 @@ int start_TRs_search (Dot_input* param) {
 	struct config *cfg = param->config_params;
 	result_findTR *current_result;	
 	TRs_Result_Bundle *trs_current_bundle, *last_tandem_found, *previous_window_tandem, *trs_thread_bundle, **trs_global_bundle;
-	int error=0, insert_result, tid, num_threads, i;
+	int error=0, insert_result, tid, num_threads;
 
 	if ((cfg->fvalue < 0) || (cfg->fvalue > 1)) {
 		printf ("MinMatch ranges in [0,1]\n");
@@ -48,7 +50,7 @@ int start_TRs_search (Dot_input* param) {
 		return 1;
 	}
 
-	num_threads = omp_get_num_threads();
+	num_threads = omp_get_max_threads();
 	trs_global_bundle = (TRs_Result_Bundle **) malloc(sizeof(TRs_Result_Bundle *)*num_threads);
 
 	window_end=m->sequence_len;
@@ -251,10 +253,85 @@ int start_TRs_search (Dot_input* param) {
 	} // end omp parallel
 
 
-	for(i=0; i<num_threads; i++){		
-		insert_TRresult_inBundle(param->TRs_bundle, &(trs_global_bundle[i][0]), RESIZE_TRS_AMOUNT, RESIZE_MOTIFS_AMOUNT);
+	if(!error)
+		error = merge_partital_TRresult(param->TRs_bundle, trs_global_bundle, num_threads, m);
+	
+
+	return error;
+}
+
+int merge_partital_TRresult(TRs_Result_Bundle *dest, TRs_Result_Bundle **trs_global_bundle, int nthreads, struct dot_matrix *m){
+	int i, j, k;
+	unsigned short int motifs_number;
+	//result_findTR *current_result;
+	TRs_Result_Bundle *last_tandem_found, *previous_window_tandem;
+
+	if (( previous_window_tandem = init_TRs_Bundle( 1, RESIZE_TR_MOTIFS_AMOUNT ) ) == NULL) {
+		fprintf(stderr, "Error in initializing previous_window_tandem\n");
+		return 1;
+	}
+
+	if (( last_tandem_found = init_TRs_Bundle( 1, RESIZE_TR_MOTIFS_AMOUNT ) ) == NULL) {
+		fprintf(stderr, "Error in initializing last_tandem_found\n");
+		return 1;
+	}
+	
+
+	for(i=0; i<nthreads; i++){
+		for(j=0;j<trs_global_bundle[i]->trs_found_offset; j++){
+
+			copy_TR_struct(&(trs_global_bundle[i]->TRs_found[j]), &(last_tandem_found->TRs_found[0]));
+			last_tandem_found->TRs_found[0].motif_start_index = 0; /*always zero at this point  */
+			last_tandem_found->trs_found_offset = 1;
+			last_tandem_found->motif_lengths_offset = 0; /*always zero at this point*/
+			motifs_number = trs_global_bundle[i]->TRs_found[j].motifs_number;
+			for ( k = trs_global_bundle[i]->TRs_found[j].motif_start_index; motifs_number > 0; ++k, --motifs_number ) {
+				insert_TRmotif_inTRresult(last_tandem_found, trs_global_bundle[i]->motif_lengths[k], RESIZE_TR_MOTIFS_AMOUNT);
+			}
+			
+			if (previous_window_tandem->motif_lengths_offset == 0) {				
+				if (insert_TRresult_inBundle(dest, last_tandem_found, RESIZE_TRS_AMOUNT, RESIZE_MOTIFS_AMOUNT)) {
+					fprintf(stderr, "Error in inserting the current result in the TRs bundle\n");
+					return 1;
+				}
+				if ( copy_TRs_Bundle(last_tandem_found, previous_window_tandem) ) {
+					fprintf(stderr, "Error in copying last_tandem_found to previous_window_tandem in start_TRs_search\n");
+					return 1;
+				}
+			} else {
+					
+					if (isLastIncluded(&(previous_window_tandem->TRs_found[0]), &(last_tandem_found->TRs_found[0]))) {
+						
+						if (last_tandem_found->TRs_found[0].purity_percentage > previous_window_tandem->TRs_found[0].purity_percentage/*(last_tandem_found->period > previous_window_tandem->period)*/) { /* if false it has found an included TR which is the same but fragmented */
+							
+							if (insert_TRresult_inBundle(dest, last_tandem_found, RESIZE_TRS_AMOUNT, RESIZE_MOTIFS_AMOUNT)) {
+								fprintf(stderr, "Error in inserting the current result in the TRs bundle\n");
+								return 1;
+							}
+						}									
+
+					} else { /* intersected Tandems */		
+
+						if (insert_TRresult_inBundle(dest, last_tandem_found, RESIZE_TRS_AMOUNT, RESIZE_MOTIFS_AMOUNT)) {
+							fprintf(stderr, "Error in inserting the current result in the TRs bundle\n");
+							return 1;
+						}
+						/*reset_TRs_Bundle(previous_window_tandem);*/
+						if ( copy_TRs_Bundle(last_tandem_found, previous_window_tandem) ) {
+							fprintf(stderr, "Error in copying last_tandem_found to previous_window_tandem in start_TRs_search\n");
+							return 1;
+						}
+
+					}
+			}
+			
+
+		}				
 		destroy_TRs_Bundle(&(trs_global_bundle[i]));
 	}
 
-	return error;
+	destroy_TRs_Bundle(&last_tandem_found);
+	destroy_TRs_Bundle(&previous_window_tandem);
+
+	return 0;
 }
