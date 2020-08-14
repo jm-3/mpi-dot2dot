@@ -32,6 +32,13 @@ int main (int argc, char* argv[]) {
   MPI_Comm_size(MPI_COMM_WORLD, &commsize);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+  #ifdef DEBUG
+    if(rank == 0){
+      #include <omp.h>
+      fprintf(stderr, "Config: %d proceses, %d threads per proc\n", commsize, omp_get_max_threads());
+    }
+  #endif
+
   
   wm = loadConfig(argc, argv, &cfg);
   
