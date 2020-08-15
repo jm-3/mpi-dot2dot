@@ -28,9 +28,10 @@ int main (int argc, char* argv[]) {
   #endif
   MPI_Request request;
   MPI_Status status;
-  int nthreads;
+  int nthreads, provided;
 
-  MPI_Init(&argc, &argv);
+  MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided);
+  if (provided < MPI_THREAD_FUNNELED) MPI_Abort(MPI_COMM_WORLD, 1);
   MPI_Comm_size(MPI_COMM_WORLD, &commsize);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
