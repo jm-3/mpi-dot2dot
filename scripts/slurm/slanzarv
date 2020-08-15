@@ -19,6 +19,7 @@ my $minfamily="";
 my $time="";
 my $mpi=0;
 my $jobname="";
+my $hybrid=0;
 
 GetOptions('help|h' => \$help,
         'cpus-per-task|c=i' => \$numcores,
@@ -30,7 +31,8 @@ GetOptions('help|h' => \$help,
         'min-family=s' => \$minfamily,
         'time|t=s' => \$time,
         'jobname=s' => \$jobname,
-        'mpi' => \$mpi);
+        'mpi' => \$mpi,
+        'hybrid' => \$hybrid);
 showhelp() if $help;
 
 if($#ARGV+1<1){
@@ -71,6 +73,17 @@ if($mpi){
         }else{
                 print $fh "#SBATCH --ntasks-per-node=$numcores\n";
         }
+}elsif($hybrid){
+        if($numcores % 6 == 0){
+                my $numprocs = $numcores / 6;
+                print $fh "#SBATCH -n $numprocs\n";
+                print $fh "#SBATCH --ntasks-per-node=4\n";
+                print $fh "#SBATCH -c 6\n";
+        }else{
+                print $fh "#SBATCH -n 1\n";
+                print $fh "#SBATCH --ntasks-per-node=1\n";
+                print $fh "#SBATCH -c $numcores\n";
+        }
 }else{
         if($numcores > 24){
                 print $fh "#SBATCH -c 24\n";
@@ -89,6 +102,16 @@ print $fh "#SBATCH --mail-user=$email\n";
 
 print $fh "#SBATCH --time=$time\n" if($time);
 
+if($hybrid){
+        my $numthreads;
+        print $fh "\n";
+        if($numcores % 6 == 0){
+                $numthreads = 6;
+        }else{
+                $numthreads = $numcores;
+        }
+        print $fh "export OMP_NUM_THREADS=$numthreads\n";
+}
 
 print $fh "\n";
 print $fh "srun @ARGV\n";
@@ -126,4 +149,3 @@ sub showhelp{
 
         exit 0;
 }
-

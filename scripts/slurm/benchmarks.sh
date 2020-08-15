@@ -75,6 +75,14 @@ do
             shift
             shift
             ;;
+            --hybrid)
+            NUMTHREADS=$2
+            MPI="true"
+            MPIRUN="--hybrid"
+            suffix_outputname="threads-$NUMTHREADS"
+            shift
+            shift
+            ;; 
             --time)
             TIME="--time $2"
             shift
