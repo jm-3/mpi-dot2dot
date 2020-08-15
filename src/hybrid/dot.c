@@ -7,6 +7,7 @@
 #include "output.h"
 #include "filtering.h"
 #include "schedules.h"
+#include <omp.h>
 
 
 int main (int argc, char* argv[]) {    
@@ -27,14 +28,25 @@ int main (int argc, char* argv[]) {
   #endif
   MPI_Request request;
   MPI_Status status;
+  int nthreads;
 
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &commsize);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+  // setting num threads
+  if (rank == 0) {
+    char *nthreads_str = getenv("OMP_NUM_THREADS");
+    if (nthreads_str)
+      nthreads = atoi(nthreads_str);
+    else
+      nthreads = 1;
+  }
+  MPI_Bcast(&nthreads, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  omp_set_num_threads(nthreads);
+
   #ifdef DEBUG
-    if(rank == 0){
-      #include <omp.h>
+    if(rank == 0){      
       fprintf(stderr, "Config: %d proceses, %d threads per proc\n", commsize, omp_get_max_threads());
     }
   #endif
