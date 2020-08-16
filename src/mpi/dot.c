@@ -270,7 +270,7 @@ int main (int argc, char* argv[]) {
     
     if(rank==0){
       fprintf(stderr, "| RANK | #seqs | bps | t_reading | t_computing | t_communicating | t_writing | t_waiting | TOTAL |\n");   
-      for(i=0; i<commsize; i++){
+      for(int i=0; i<commsize; i++){
         idx = numDebugData * i;
         double total = ddg[idx+3] + ddg[idx+4] + ddg[idx+5] + ddg[idx+6] + ddg[idx+7];
         fprintf(stderr,"%d\t%d\t%ld\t%.2lf\t%.2lf\t%.2lf\t%.2lf\t%.2lf\t%.2lf\n",(int)ddg[idx], (int)ddg[idx+1], (long int)ddg[idx+2], ddg[idx+3], ddg[idx+4], ddg[idx+5], ddg[idx+6], ddg[idx+7], total);
