@@ -191,7 +191,7 @@ int start_TRs_search (Dot_input* param) {
 					//window_index++;
 				} else {
 					
-					if (isLastIncluded(&(previous_window_tandem->TRs_found[0]), &(last_tandem_found->TRs_found[0]))) {
+					if (isLastIncluded(&(previous_window_tandem->TRs_found[0]), &(last_tandem_found->TRs_found[0]))) {						
 						/* included Tandems */
 						#ifdef DEBUG_ALG
 							printf("\tThread %d: TRS WINDOW INDEX INCLUDED:%d\n", tid, window_index);
@@ -265,6 +265,8 @@ int merge_partital_TRresult(TRs_Result_Bundle *dest, TRs_Result_Bundle **trs_glo
 	unsigned short int motifs_number;
 	//result_findTR *current_result;
 	TRs_Result_Bundle *last_tandem_found, *previous_window_tandem;
+	long int window_index;
+
 
 	if (( previous_window_tandem = init_TRs_Bundle( 1, RESIZE_TR_MOTIFS_AMOUNT ) ) == NULL) {
 		fprintf(stderr, "Error in initializing previous_window_tandem\n");
@@ -289,7 +291,7 @@ int merge_partital_TRresult(TRs_Result_Bundle *dest, TRs_Result_Bundle **trs_glo
 				insert_TRmotif_inTRresult(last_tandem_found, trs_global_bundle[i]->motif_lengths[k], RESIZE_TR_MOTIFS_AMOUNT);
 			}
 			
-			if (previous_window_tandem->motif_lengths_offset == 0) {				
+			if (previous_window_tandem->motif_lengths_offset == 0) { /* si empty previous */
 				if (insert_TRresult_inBundle(dest, last_tandem_found, RESIZE_TRS_AMOUNT, RESIZE_MOTIFS_AMOUNT)) {
 					fprintf(stderr, "Error in inserting the current result in the TRs bundle\n");
 					return 1;
@@ -299,16 +301,29 @@ int merge_partital_TRresult(TRs_Result_Bundle *dest, TRs_Result_Bundle **trs_glo
 					return 1;
 				}
 			} else {
-					
 					if (isLastIncluded(&(previous_window_tandem->TRs_found[0]), &(last_tandem_found->TRs_found[0]))) {
-						
+						window_index = last_tandem_found->TRs_found[0].origin_position;
+
 						if (last_tandem_found->TRs_found[0].purity_percentage > previous_window_tandem->TRs_found[0].purity_percentage/*(last_tandem_found->period > previous_window_tandem->period)*/) { /* if false it has found an included TR which is the same but fragmented */
-							
-							if (insert_TRresult_inBundle(dest, last_tandem_found, RESIZE_TRS_AMOUNT, RESIZE_MOTIFS_AMOUNT)) {
-								fprintf(stderr, "Error in inserting the current result in the TRs bundle\n");
-								return 1;
+							switch (m->mask[window_index]) {
+								case (UNCHECKED) : {
+									/* tandem has not been checked before */
+									
+									if (insert_TRresult_inBundle(dest, last_tandem_found, RESIZE_TRS_AMOUNT, RESIZE_MOTIFS_AMOUNT)) {
+										fprintf(stderr, "Error in inserting the current result in the TRs bundle\n");
+										return 1;
+									}									
+									break;											
+								}
+								case (CHECKED) : {
+									/* it is a part of an other tandem found before */									
+									break;
+								}
+								default : { break; }
 							}
-						}									
+							
+
+						}							
 
 					} else { /* intersected Tandems */		
 
