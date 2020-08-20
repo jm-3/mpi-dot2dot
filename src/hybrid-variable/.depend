@@ -1,0 +1,34 @@
+dot_matrix.o: dot_matrix.c dot_matrix.h common.h \
+ /usr/lib/openmpi/include/mpi.h \
+ /usr/lib/openmpi/include/mpi_portable_platform.h utils.h fileManager.h
+schedules.o: schedules.c schedules.h utils.h fileManager.h common.h \
+ /usr/lib/openmpi/include/mpi.h \
+ /usr/lib/openmpi/include/mpi_portable_platform.h
+output.o: output.c output.h algorithm.h common.h \
+ /usr/lib/openmpi/include/mpi.h \
+ /usr/lib/openmpi/include/mpi_portable_platform.h utils.h dot_matrix.h \
+ fileManager.h configReader.h
+dot.o: dot.c algorithm.h common.h /usr/lib/openmpi/include/mpi.h \
+ /usr/lib/openmpi/include/mpi_portable_platform.h utils.h dot_matrix.h \
+ fileManager.h configReader.h mark_time.h output.h filtering.h \
+ schedules.h
+mark_time.o: mark_time.c mark_time.h
+fileManager.o: fileManager.c fileManager.h common.h \
+ /usr/lib/openmpi/include/mpi.h \
+ /usr/lib/openmpi/include/mpi_portable_platform.h utils.h
+filtering.o: filtering.c filtering.h common.h \
+ /usr/lib/openmpi/include/mpi.h \
+ /usr/lib/openmpi/include/mpi_portable_platform.h utils.h algorithm.h \
+ dot_matrix.h fileManager.h configReader.h
+algorithm.o: algorithm.c algorithm.h common.h \
+ /usr/lib/openmpi/include/mpi.h \
+ /usr/lib/openmpi/include/mpi_portable_platform.h utils.h dot_matrix.h \
+ fileManager.h configReader.h
+configReader.o: configReader.c configReader.h common.h \
+ /usr/lib/openmpi/include/mpi.h \
+ /usr/lib/openmpi/include/mpi_portable_platform.h utils.h
+algorithm_omp.o: algorithm_omp.c algorithm.h common.h \
+ /usr/lib/openmpi/include/mpi.h \
+ /usr/lib/openmpi/include/mpi_portable_platform.h utils.h dot_matrix.h \
+ fileManager.h configReader.h
+utils.o: utils.c utils.h
