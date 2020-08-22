@@ -28,7 +28,7 @@ int main (int argc, char* argv[]) {
   #endif
   MPI_Request request;
   MPI_Status status;
-  int nthreads, provided;
+  int provided;
   char nodename[MPI_MAX_PROCESSOR_NAME];
   int nodenamelen, color, key, intranode_commsize, intranode_rank, total_cores, *coresperproc=NULL, mycores;
   long int *intranode_sizes=NULL;
@@ -41,7 +41,7 @@ int main (int argc, char* argv[]) {
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
   // setting num threads
-  if (rank == 0) {
+  /*if (rank == 0) {
     char *nthreads_str = getenv("OMP_NUM_THREADS");
     if (nthreads_str)
       nthreads = atoi(nthreads_str);
@@ -55,7 +55,7 @@ int main (int argc, char* argv[]) {
     if(rank == 0){      
       fprintf(stderr, "Config: %d proceses, %d threads per proc\n", commsize, omp_get_max_threads());
     }
-  #endif
+  #endif*/
 
   
   wm = loadConfig(argc, argv, &cfg);
