@@ -165,12 +165,9 @@ void assings_free(struct assigments *a){
 
 /*******************************************************************************************/
 /* hybrid */
-int *shareCoresPerProcBySizes(int long *sizes, int commsize, int total_cores, int mincoresperproc, int maxcoresperproc){
+int *shareCoresPerProcBySizes(int long *sizes, int commsize, int total_cores){
 	int *cores, i, j, remaining_cores, mproc;
-
-	// some previous checks and warnings
-	if(mincoresperproc * commsize > total_cores) { fprintf(stderr, "Error: not enough cores (%d mincoresperproc * %d procs > %d available cores)\n", mincoresperproc, commsize, total_cores); exit(1); }
-	if(maxcoresperproc * commsize < total_cores) { fprintf(stderr, "Warning: not using all the available cores (%d maxcoresperproc * %d procs < %d available cores)\n", maxcoresperproc, commsize, total_cores);}
+	int mincoresperproc = 1;
 
 
 	cores = (int *) memalloc(sizeof(int)*commsize, "Error allocating memory for cores\n");

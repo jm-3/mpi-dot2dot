@@ -157,10 +157,7 @@ int main (int argc, char* argv[]) {
   if(intranode_rank == 0){
     total_cores = omp_get_num_procs();
 
-    int mincoresperproc = 2;
-    int maxcoresperproc = 0;
-
-    coresperproc = shareCoresPerProcBySizes(intranode_sizes, intranode_commsize, total_cores, mincoresperproc, maxcoresperproc);
+    coresperproc = shareCoresPerProcBySizes(intranode_sizes, intranode_commsize, total_cores);
 
     #ifdef DEBUG  
       fprintf(stderr, "Node: %s Total cores: %d ", nodename, total_cores);
