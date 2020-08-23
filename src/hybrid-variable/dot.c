@@ -28,7 +28,7 @@ int main (int argc, char* argv[]) {
   #endif
   MPI_Request request;
   MPI_Status status;
-  int provided;
+  int nthreadsPerProcIni, provided;
   char nodename[MPI_MAX_PROCESSOR_NAME];
   int nodenamelen, color, key, intranode_commsize, intranode_rank, total_cores, *coresperproc=NULL, mycores;
   long int *intranode_sizes=NULL;
@@ -41,17 +41,17 @@ int main (int argc, char* argv[]) {
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
   // setting num threads
-  /*if (rank == 0) {
+  if (rank == 0) {
     char *nthreads_str = getenv("OMP_NUM_THREADS");
     if (nthreads_str)
-      nthreads = atoi(nthreads_str);
+      nthreadsPerProcIni = atoi(nthreads_str);
     else
-      nthreads = 1;
+      nthreadsPerProcIni = 1;
   }
-  MPI_Bcast(&nthreads, 1, MPI_INT, 0, MPI_COMM_WORLD);
-  omp_set_num_threads(nthreads);
+  MPI_Bcast(&nthreadsPerProcIni, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  //omp_set_num_threads(nthreads);
 
-  #ifdef DEBUG
+  /*#ifdef DEBUG
     if(rank == 0){      
       fprintf(stderr, "Config: %d proceses, %d threads per proc\n", commsize, omp_get_max_threads());
     }
@@ -156,7 +156,8 @@ int main (int argc, char* argv[]) {
 
   /* distribute cores among procs */
   if(intranode_rank == 0){
-    total_cores = omp_get_num_procs();
+    //total_cores = omp_get_num_procs();
+    total_cores = nthreadsPerProcIni * intranode_commsize;
 
     coresperproc = shareCoresPerProcBySizes(intranode_sizes, intranode_commsize, total_cores);
 
@@ -187,6 +188,7 @@ int main (int argc, char* argv[]) {
   
   fm->finish = false;  
   
+  mysize = 0; /* recount sizes to check it coincides */
   while(iter < myassingments) {
     #ifdef DEBUG_TIME
       start = MPI_Wtime();
