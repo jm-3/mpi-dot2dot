@@ -169,6 +169,7 @@ int *shareCoresPerProcBySizes(int long *sizes, int commsize, int total_cores){
 	int *cores, i, j, remaining_cores, mproc;
 	int mincoresperproc = 1;
 
+	if(total_cores < commsize) fprintf(stderr, "Warning: there are less cores per node than processes\n");
 
 	cores = (int *) memalloc(sizeof(int)*commsize, "Error allocating memory for cores\n");
 	// initial share

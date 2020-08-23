@@ -13,6 +13,7 @@
 #define MAX_FILELINE 256
 /*  #define MAX_PARAM_LEN 1024  defined in common.h  */
 
+#define CORES_FLAG 131072
 #define SCHED_FLAG 65536
 #define FILT_FLAG 32768
 #define TOLL_FLAG 16384
@@ -49,6 +50,7 @@ struct config {
   float min_purity; 
   _Bool verbose;
   schedule_t schedule;
+  int coresPerNode;
 };
 
 struct paramList {

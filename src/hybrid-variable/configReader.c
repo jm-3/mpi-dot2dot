@@ -17,6 +17,7 @@ struct config *command_line_parser (int argc, char* argv[]) {
     {"verbose",   no_argument, 0,  'v' },
     {"version",   no_argument, 0,  'V' },
     {"schedule", required_argument, 0, 'S'},
+    {"corespernode", required_argument, 0, 'C'},    
     {0,           0,                 0,  0   }
   };
   cfg = (struct config *) malloc (sizeof (struct config));
@@ -36,9 +37,10 @@ struct config *command_line_parser (int argc, char* argv[]) {
   cfg->min_TR_len = 12;
   cfg->min_purity = 0.1;
   cfg->schedule = BALANCED;
+  cfg->coresPerNode = 0;
   cfg->verbose = false;
   /*  Parameters from command line  */
-  while ((c = getopt_long(argc, argv,"hc:s:l:L:m:o:I:G:t:vVS:", 
+  while ((c = getopt_long(argc, argv,"hc:s:l:L:m:o:I:G:t:vVS:C:", 
 			  long_options, &opt_index )) != -1) {
     switch (c) {
     case 'v':  /*  enable verbose output  */
@@ -96,6 +98,10 @@ struct config *command_line_parser (int argc, char* argv[]) {
       else
         cfg->schedule = WRONG;
       break;
+    case 'C':  /*  coresPerNode  */
+      cfg->flags += CORES_FLAG;
+      cfg->coresPerNode = atoi (optarg);
+      break;  
     default:
       free (cfg);
       exit (EXIT_FAILURE);
@@ -262,7 +268,13 @@ void param_list_parser (struct paramList *par_list, struct config *cfg) {
       else
         cfg->schedule = WRONG;       
       }
-    }        
+    }
+    if (strcmp (elem->param, "corespernode") == 0) {
+      if ((cfg->flags & CORES_FLAG) == 0) {
+       cfg->flags += CORES_FLAG;
+       cfg->coresPerNode = atoi (elem->value);
+      }
+    }            
   }
 }
 
@@ -391,6 +403,12 @@ MATCH_ARRAY_TYPE ** loadConfig(int argc, char* argv[], struct config **cfg){
     exit(EXIT_FAILURE);
   }
 
+  if(((*cfg)->flags & CORES_FLAG) != CORES_FLAG){
+    printf("Missing REQUIRED parameter: corespernode\n");
+    print_usage();
+    exit (EXIT_FAILURE);
+  }
+
   #ifdef DEBUG_CONFIG
     fprintf(stderr, "\tCONFIG VALUES\n");
     fprintf(stderr, "Sequence: %s\n", (*cfg)->svalue);
@@ -407,6 +425,7 @@ MATCH_ARRAY_TYPE ** loadConfig(int argc, char* argv[], struct config **cfg){
     fprintf(stderr, "MinPurity: %f\n", (*cfg)->min_purity);
     fprintf(stderr, "Tolerance: %f\n", (*cfg)->tollerance);
     fprintf(stderr, "AllowOverlap: %s\n", (*cfg)->allow_overlap==true?"YES":"NO");
+    fprintf(stderr, "CoresPerNode: %d\n", (*cfg)->coresPerNode);
   #endif
 
   return wm;

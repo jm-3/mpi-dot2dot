@@ -13,6 +13,8 @@ void print_usage (void) {
   printf("   configuration file name (required)\n");
   printf("   -o, --output (Outfile):\n");
   printf("   output file name. (bed/dot)\n");
+  printf("   -C, --corespernode (CoresPerNode):   [required]\n");
+  printf("   avalaibles cores per node \n");  
   printf("   -l, --minmotif (MinMotifLen):   [default=2]\n");
   printf("   minimum size in bp of the motif sequence \n");
   printf("   -L, --maxmotif (MaxMotifLen): [default=30]\n"); 

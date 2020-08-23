@@ -157,7 +157,7 @@ int main (int argc, char* argv[]) {
   /* distribute cores among procs */
   if(intranode_rank == 0){
     //total_cores = omp_get_num_procs();
-    total_cores = nthreadsPerProcIni * intranode_commsize;
+    total_cores = cfg->coresPerNode;
 
     coresperproc = shareCoresPerProcBySizes(intranode_sizes, intranode_commsize, total_cores);
 
