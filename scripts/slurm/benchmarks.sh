@@ -82,6 +82,14 @@ do
             suffix_outputname="threads-$NUMTHREADS"
             shift
             shift
+            ;;
+            --hybrid-variable)
+            NUMTHREADS=$2
+            MPI="true"
+            MPIRUN="--hybrid-variable"
+            suffix_outputname="threads-$NUMTHREADS"
+            shift
+            shift
             ;; 
             --time)
             TIME="--time $2"
@@ -132,5 +140,4 @@ for i in "${data[@]}"; do
                 slanzarv --jobname $algname-d$ID-$NUMTHREADS-$j $MPIRUN -c $NUMTHREADS $TIME ./dot $executable_opts -o $OUTPUTFILE
         done
 done
-
 

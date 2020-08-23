@@ -20,6 +20,7 @@ my $time="";
 my $mpi=0;
 my $jobname="";
 my $hybrid=0;
+my $hybrid_variable=0;
 
 GetOptions('help|h' => \$help,
         'cpus-per-task|c=i' => \$numcores,
@@ -32,7 +33,8 @@ GetOptions('help|h' => \$help,
         'time|t=s' => \$time,
         'jobname=s' => \$jobname,
         'mpi' => \$mpi,
-        'hybrid' => \$hybrid);
+        'hybrid' => \$hybrid,
+        'hybrid-variable' => \$hybrid_variable);
 showhelp() if $help;
 
 if($#ARGV+1<1){
@@ -84,6 +86,24 @@ if($mpi){
                 print $fh "#SBATCH --ntasks-per-node=1\n";
                 print $fh "#SBATCH -c $numcores\n";
         }
+}elsif($hybrid_variable){
+        if($numcores < 12){
+                my $procpernode;
+                if($numcores == 1 || $numcores == 2){
+                        $procpernode=1;
+                }else{
+                        $procpernode=2;
+                }
+                print $fh "#SBATCH -n $procpernode\n";
+                print $fh "#SBATCH --ntasks-per-node=$procpernode\n";
+                my $cores=$numcores/$procpernode;
+                print $fh "#SBATCH -c $cores\n";
+        }else{
+                my $numprocs = $numcores / 6;
+                print $fh "#SBATCH -n $numprocs\n";
+                print $fh "#SBATCH --ntasks-per-node=4\n";
+                print $fh "#SBATCH -c 6\n";
+        }
 }else{
         if($numcores > 24){
                 print $fh "#SBATCH -c 24\n";
@@ -114,7 +134,15 @@ if($hybrid){
 }
 
 print $fh "\n";
-print $fh "srun @ARGV\n";
+my $variable="";
+if($hybrid_variable){
+        if($numcores < 24){
+                $variable="-C $numcores";
+        }else{
+                $variable="-C 24";
+        }
+}
+print $fh "srun @ARGV $variable\n";
 
 
 close $fh;
@@ -125,27 +153,6 @@ system("sbatch $BATCHARGS $SCRIPT");
 
 sub showhelp{
         print "\nSLANZARV: script que facilita el envío de trabajos a SLURM\n\n";
-        print "Modo de uso:\n";
-        print "\tslanzarv [opciones] programa [argumentos]\n";
-        print "\tOpciones:\n";
-        print "\t\t--cpus-per-task | -c : número de CPUs\n";
-        print "\t\t--mem | -m : tamaño de memoria en MB\n";
-        print "\t\t--nomail : desactiva el envio de email en caso de fallo o cuando finaliza el trabajo\n";
-        print "\t\t--short : envia el trabajo a la cola corta\n";
-        print "\t\t--time | -t: máximo tiempo de ejecución (ha de ser menor que el tiempo límite de la partición). Por defecto, el tiempo por defecto de la partición. Formatos:\n";
-        print "\t\t\t \"minutes\", \"minutes:seconds\", \"hours:minutes:seconds\", \"days-hours\", \"days-hours:minutes\" and \"days-hours:minutes:seconds\"\n";
-        print "\t\t--use-only-faster-nodes : el trabajo solo podrá ser ejecutado en los nodos más potentes (grupo metis, hermes o kratos). No tiene efecto en la cola corta, puesto que esta cola solo usa los más nodos rápidos\n";
-        print "\t\t--family : permite seleccionar la familia de CPUs en la que se ejecutará el trabajo. Las opciones disponibles son (ordenados de más nuevos a más antiguos)\n";
-        print "\t\t\ta) por grupos: metis, hermes, kratos, calypso\n";
-        print "\t\t\tb) por microarquitectura: cascadelake, skylake, broadwell, haswell, westmere-ep, harpertown\n";
-        print "\t\t--min-family : permite seleccionar la familia más antigua de CPUs a usar. Ejemplo: --min-family=kratos podrá usar metis, hermes y kratos, pero no calypso\n";
-        print "\n";
-        print "\tEjemplo:\n";
-        print "\t\tSolicitar 8 CPUs y 2400 MB de RAM para miprograma llamado con los los argumentos '230 asx'\n";
-        print "\t\t\tslanzarv -c 8 -m 24000 ./miprograma 230 asx\n";
-        print "\tUso avanzado:\n";
-        print "\t\tSe pueden pasar opciones adicionales a sbatch. Para ello, es necesario indicar el fin de las opciones con --\n";
-        print "\t\t\tslanzarv -c 4 -m 3400 --contiguous --hold -- ./miprograma 230 asx\n";
 
         exit 0;
 }
