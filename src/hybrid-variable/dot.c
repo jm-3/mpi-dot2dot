@@ -87,7 +87,8 @@ int main (int argc, char* argv[]) {
       start = MPI_Wtime();
     #endif    
 
-    sinfo = filemanager_seq_count(fm, cfg->schedule);
+    // we need sequence number and sizes for hybrid-variable
+    sinfo = __filemanager_seqsize_count(fm);
 
     #ifdef DEBUG_TIME
       end = MPI_Wtime();
@@ -267,9 +268,6 @@ int main (int argc, char* argv[]) {
 
   output_destroy (output);
 
-  #ifdef DEBUG
-    fprintf(stderr,"Proc: %d | num_assigs: %u | offset: %ld | size: %ld\n", rank, myassingments, myoffset, mysize);    
-  #endif   
 
   #ifdef DEBUG_TIME
     start = MPI_Wtime();    
@@ -291,6 +289,11 @@ int main (int argc, char* argv[]) {
     end = MPI_Wtime();
     twait += end - start;
   #endif  
+
+  #ifdef DEBUG
+    fprintf(stderr,"Proc: %d | num_assigs: %u | offset: %ld | size: %ld\n", rank, myassingments, myoffset, mysize);    
+  #endif   
+
   
   if(rank == 0){
     #ifdef DEBUG_TIME

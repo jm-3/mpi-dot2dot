@@ -47,6 +47,7 @@ struct sequences_info {
 };
 
 struct sequences_info * filemanager_seq_count(struct filemanager *fmobj, schedule_t schedule);
+struct sequences_info * __filemanager_seqsize_count (struct filemanager *fmobj);
 void sequences_info_free(struct sequences_info *);
 
 
