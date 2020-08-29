@@ -76,11 +76,11 @@ if($mpi){
                 print $fh "#SBATCH --ntasks-per-node=$numcores\n";
         }
 }elsif($hybrid){
-        if($numcores % 6 == 0){
-                my $numprocs = $numcores / 6;
+        if($numcores % 2 == 0){
+                my $numprocs = $numcores / 2;
                 print $fh "#SBATCH -n $numprocs\n";
-                print $fh "#SBATCH --ntasks-per-node=4\n";
-                print $fh "#SBATCH -c 6\n";
+                print $fh "#SBATCH --ntasks-per-node=12\n";
+                print $fh "#SBATCH -c 2\n";
         }else{
                 print $fh "#SBATCH -n 1\n";
                 print $fh "#SBATCH --ntasks-per-node=1\n";
@@ -105,12 +105,15 @@ if($mpi){
                 print $fh "#SBATCH -c 6\n";
         }
 }else{
+        print $fh "#SBATCH -n 1\n";
+        print $fh "#SBATCH --ntasks-per-node=1\n";
         if($numcores > 24){
                 print $fh "#SBATCH -c 24\n";
         }else{
                 print $fh "#SBATCH -c $numcores\n";
         }
 }
+print $fh "#SBATCH --exclusive\n";
 print $fh "#SBATCH --mem $mem\n";
 
 print $fh "#SBATCH --partition=thinnodes\n";
@@ -125,10 +128,15 @@ print $fh "#SBATCH --time=$time\n" if($time);
 if($hybrid){
         my $numthreads;
         print $fh "\n";
-        if($numcores % 6 == 0){
-                $numthreads = 6;
+        #if($numcores % 6 == 0){
+        #       $numthreads = 6;
+        #}else{
+        #       $numthreads = $numcores;
+        #}
+        if($numcores >= 2){
+                $numthreads=2;
         }else{
-                $numthreads = $numcores;
+                $numthreads=1;
         }
         print $fh "export OMP_NUM_THREADS=$numthreads\n";
 }
@@ -144,6 +152,8 @@ if($hybrid_variable){
 }
 print $fh "srun @ARGV $variable\n";
 
+print $fh "rm output.dot\n";
+print $fh "touch output.dot\n";
 
 close $fh;
 
