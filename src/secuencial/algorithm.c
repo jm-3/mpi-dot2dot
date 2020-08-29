@@ -297,37 +297,37 @@ void destroy_result_struct(result_findTR** rs) {
 \*****************************************************************************/
 
 /*****************************************************************************\
-**************************** DOT_THREAD_INPUT STRUCT **************************
+**************************** DOT_INPUT STRUCT **************************
 \*****************************************************************************/
 
-Dot_Thread_input* dot_Thread_obj_init(struct config *cp, MATCH_ARRAY_TYPE **wm, struct filemanager *fm, struct outfile* output, short int t_id ) {
+Dot_input* dot_obj_init(struct config *cp, MATCH_ARRAY_TYPE **wm, struct filemanager *fm, struct outfile* output, short int t_id ) {
 	
-	Dot_Thread_input* dot_Thread_input;
+	Dot_input* dot_input;
 
-	if ((dot_Thread_input = (Dot_Thread_input*) malloc(sizeof(Dot_Thread_input))) == NULL) {
-		perror("Error in allocating memory for dot_Thread_input in dot_Thread_obj_init\n");
+	if ((dot_input = (Dot_input*) malloc(sizeof(Dot_input))) == NULL) {
+		perror("Error in allocating memory for dot_input in dot_obj_init\n");
 		return NULL;
 	}
 	
 	/*  input sequence  */
-	dot_Thread_input->sequence = NULL;
+	dot_input->sequence = NULL;
 	/*  sequence name  */
-	dot_Thread_input->IDSeq = NULL;
-	dot_Thread_input->thread_TRs_bundle = init_TRs_Bundle(RESIZE_TRS_AMOUNT, RESIZE_MOTIFS_AMOUNT);	
-	dot_Thread_input->matrix = NULL;
-	dot_Thread_input->config_params = cp;
-	dot_Thread_input->file_manager = fm;
-	dot_Thread_input->weight_matrix = wm;
-	dot_Thread_input->output = output;
-	dot_Thread_input->t_id = t_id;
+	dot_input->IDSeq = NULL;
+	dot_input->TRs_bundle = init_TRs_Bundle(RESIZE_TRS_AMOUNT, RESIZE_MOTIFS_AMOUNT);	
+	dot_input->matrix = NULL;
+	dot_input->config_params = cp;
+	dot_input->file_manager = fm;
+	dot_input->weight_matrix = wm;
+	dot_input->output = output;
+	dot_input->t_id = t_id;
 
-	return dot_Thread_input;
+	return dot_input;
 }
 
-void destroy_dot_Thread_obj(Dot_Thread_input** obj) {
+void destroy_dot_obj(Dot_input** obj) {
 
 	
-	destroy_TRs_Bundle(&((*obj)->thread_TRs_bundle));
+	destroy_TRs_Bundle(&((*obj)->TRs_bundle));
 	/* freed at the end  */
 	(*obj)->matrix = NULL;
 	(*obj)->config_params = NULL;
@@ -337,11 +337,11 @@ void destroy_dot_Thread_obj(Dot_Thread_input** obj) {
 	*obj = NULL;
 }
 
-void reset_dot_Thread_obj(Dot_Thread_input* obj) {
+void reset_dot_obj(Dot_input* obj) {
 
-	free(obj->sequence);
-	free(obj->IDSeq);
-	reset_TRs_Bundle(obj->thread_TRs_bundle);
+	//free(obj->sequence);
+	//free(obj->IDSeq);
+	reset_TRs_Bundle(obj->TRs_bundle);
 	obj->matrix = NULL;
 
 }
@@ -403,9 +403,10 @@ char* copy_seqPart(int start_index, int length, char* seq) {
 int getFinalTandemLength (int window_index, int current_match_index, int window_length, int max_length, MATCH_ARRAY_TYPE** pointers) {
 	
 	int w_i=window_index, value=0, c_i=current_match_index, final_length=0;
-	while(final_length <= max_length) {
+	
+	while(final_length <= max_length) {		
 		value = pointers[w_i][c_i];
-		if (value == 1) {
+		if (value == 100) {
 			final_length ++;
 			w_i ++;
 			c_i ++;
@@ -415,14 +416,17 @@ int getFinalTandemLength (int window_index, int current_match_index, int window_
 	}
 	return final_length;
 }
-MATCH_ARRAY_TYPE getValueFromMatchArrays(int char_index, int match_char_index, MATCH_ARRAY_TYPE** pointers) {
+//MATCH_ARRAY_TYPE getValueFromMatchArrays(int char_index, int match_char_index, MATCH_ARRAY_TYPE** pointers) {
+char getValueFromMatchArrays(int char_index, int match_char_index, char **pointers) {
 	/*return the match value in the array pointed by 'char_index' in position match_char_index*/
 	return pointers[char_index][match_char_index];
 }
 
-MATCH_ARRAY_TYPE getSumFromMatchValues(int window_length, int window_index, int current_match_index, MATCH_ARRAY_TYPE** pointers) {
+//MATCH_ARRAY_TYPE getSumFromMatchValues(int window_length, int window_index, int current_match_index, MATCH_ARRAY_TYPE** pointers) {
+float getSumFromMatchValues(int window_length, int window_index, int current_match_index, char **pointers) {	
 	int i=window_index, j=current_match_index;
-	MATCH_ARRAY_TYPE sum=0;
+	//MATCH_ARRAY_TYPE sum=0;
+	int sum=0;
 	/*  XXX -  Secondo me qui c'e' un bug  */
 	while(j<current_match_index+window_length) {
 		sum += getValueFromMatchArrays(i, j, pointers);
@@ -430,19 +434,22 @@ MATCH_ARRAY_TYPE getSumFromMatchValues(int window_length, int window_index, int 
 		j++;
 	}
 	/*Sum of match values in current window*/
-	return sum;
+	return (float) sum / 100.0;
 }
 
 
-int findTandemRepeats(int window_length, int window_index, struct dot_matrix *m, MATCH_ARRAY_TYPE minThreshold, int max_jumps, result_findTR* rs) {
+//int findTandemRepeats(int window_length, int window_index, struct dot_matrix *m, MATCH_ARRAY_TYPE minThreshold, int max_jumps, result_findTR* rs) {
+int findTandemRepeats(int window_length, int window_index, struct dot_matrix *m, float minThreshold, int max_jumps, result_findTR* rs) {	
 	int current_match_index=window_index+window_length, i=0, 
 		final_tandem_length=0, max_length=0, insertions_count=0,
 		current_insertion_len=0, match_stop=0, jump_limit_modifier=0, 
 		first_useless=0, jumps_limit=max_jumps, jumps_bundle_allowed=window_length/2;
 	unsigned short motifs_number=0;
 	short copy_number=0;
-	MATCH_ARRAY_TYPE purity_sum = window_length;
-	MATCH_ARRAY_TYPE sum;
+	//MATCH_ARRAY_TYPE purity_sum = window_length;
+	//MATCH_ARRAY_TYPE sum;
+	float purity_sum = window_length;
+	float sum;
 
 	if ( insert_TRmotif_inTRresult(rs->resulted_TR, window_length, RESIZE_TR_MOTIFS_AMOUNT) ) {
 		perror("Error in findTandemRepeats: first motif (window_index)\n");
@@ -453,9 +460,8 @@ int findTandemRepeats(int window_length, int window_index, struct dot_matrix *m,
 
 	while (current_match_index <= m->sequence_len-window_length) {
 		sum = getSumFromMatchValues(window_length, window_index, current_match_index, m->pointers_sequence);
-
-    	if ((sum >= minThreshold) && (sum <= window_length)) {
-
+    	
+		if ((sum >= minThreshold) && (sum <= window_length)) {
 			
 			if (match_stop) { /* save skipped sequence as insertion */
 
@@ -531,7 +537,8 @@ int findTandemRepeats(int window_length, int window_index, struct dot_matrix *m,
 		rs->resulted_TR->TRs_found[0].copy_number = copy_number;
 		rs->resulted_TR->TRs_found[0].full_length = (window_length * copy_number) + insertions_count + final_tandem_length;
 		rs->resulted_TR->TRs_found[0].partial_length = (window_length * copy_number) + final_tandem_length;
-		rs->resulted_TR->TRs_found[0].purity_percentage = (MATCH_ARRAY_TYPE) purity_sum/(rs->resulted_TR->TRs_found[0].full_length);
+		//rs->resulted_TR->TRs_found[0].purity_percentage = (MATCH_ARRAY_TYPE) purity_sum/(rs->resulted_TR->TRs_found[0].full_length);
+		rs->resulted_TR->TRs_found[0].purity_percentage = (float) purity_sum/(rs->resulted_TR->TRs_found[0].full_length);
 		rs->resulted_TR->TRs_found[0].origin_position = window_index;
 		rs->resulted_TR->TRs_found[0].period = window_length;	
 		rs->resulted_TR->TRs_found[0].stats = 0;
@@ -575,7 +582,7 @@ void expansion_filter(TRs_Result_Bundle* TRs_bundle, TRs_Result_Bundle* last_tan
 		if (TRs_bundle->trs_found_offset > 0) {
 			
 #ifdef DEBUG_ALG
-			printf("\t|-- Exp Filter --> There is one or more TRs: %d\n", tot_trs_left);		
+			printf("\t|-- Exp Filter --> There is one or more TRs: %lu\n", tot_trs_left);		
 #endif	
 			
 			for ( i = 0; i < TRs_bundle->trs_found_offset; ++i ) {
@@ -603,7 +610,7 @@ void expansion_filter(TRs_Result_Bundle* TRs_bundle, TRs_Result_Bundle* last_tan
 			/*Second, filter by purity */
 			/*Start from the first valid*/
 #ifdef DEBUG_ALG
-			printf("\t|-- Exp Filter --> There are %d TRs left after filtering by score and partial length\n", tot_trs_left);			
+			printf("\t|-- Exp Filter --> There are %lu TRs left after filtering by score and partial length\n", tot_trs_left);			
 #endif
 			i = 0;
 			while ( (results[i].copy_number == 0) && ( i < TRs_bundle->trs_found_offset ) ) ++i;
@@ -648,10 +655,11 @@ void print_usintArray_new(unsigned short * array,int init, int length) {
 	printf("\n");
 }
 
-int start_TRs_search (Dot_Thread_input* param) {
+int start_TRs_search (Dot_input* param) {
 	int window_length, window_length_max, window_index, window_end, max_length_flag, 
 		jumps_limit=0, gaps_limit=0, biggest_full_length=0;
-	MATCH_ARRAY_TYPE minThresholdByPercentage, minThresholdByGaps, minThreshold;
+	//MATCH_ARRAY_TYPE minThresholdByPercentage, minThresholdByGaps, minThreshold;
+	float minThresholdByPercentage, minThresholdByGaps, minThreshold;	
 	struct dot_matrix *m = param->matrix;
 	struct config *cfg = param->config_params;
 	result_findTR *current_result;	
@@ -662,7 +670,7 @@ int start_TRs_search (Dot_Thread_input* param) {
 		return 1;
 	}
 	if (cfg->gvalue < 0) { 
-		printf ("max_gaps cannot be negative\n"); 
+		printf ("max_gaps cannot be negative\n");
 		return 1; 
 	} 
 	else {
@@ -733,8 +741,11 @@ int start_TRs_search (Dot_Thread_input* param) {
 #ifdef DEBUG_ALG
 			printf("\tTRS WINDOW LENGTH STARTED:%d\n", window_length);
 #endif					
-			minThresholdByPercentage = (MATCH_ARRAY_TYPE) cfg->fvalue * window_length;
-			minThresholdByGaps = (gaps_limit >= window_length) ? ((MATCH_ARRAY_TYPE) window_length-1) : ((MATCH_ARRAY_TYPE) window_length - gaps_limit);					
+			//minThresholdByPercentage = (MATCH_ARRAY_TYPE) cfg->fvalue * window_length;
+			minThresholdByPercentage = (float) cfg->fvalue * window_length;
+			//minThresholdByGaps = (gaps_limit >= window_length) ? ((MATCH_ARRAY_TYPE) window_length-1) : ((MATCH_ARRAY_TYPE) window_length - gaps_limit);
+			minThresholdByGaps = (gaps_limit >= window_length) ? ((float) window_length-1) : ((float) window_length - gaps_limit);					
+					
 			if ((cfg->fvalue == 1) && (gaps_limit > 0)) { /* only gaps parameter */
 				minThreshold = minThresholdByGaps;
 			} else if ((gaps_limit == 0) && (cfg->fvalue < 1)) { /* only percentage parameter */
@@ -797,8 +808,8 @@ int start_TRs_search (Dot_Thread_input* param) {
 #ifdef DEBUG_ALG
 				printf("\tTRS WINDOW INDEX PREVIUOS WITH 0 COPY NUMBER:%d\n", window_index);
 #endif
-				if (insert_TRresult_inBundle(param->thread_TRs_bundle , last_tandem_found, RESIZE_TRS_AMOUNT, RESIZE_MOTIFS_AMOUNT)) {
-					perror("Error in inserting the current result in the Thread TRs bundle\n");
+				if (insert_TRresult_inBundle(param->TRs_bundle , last_tandem_found, RESIZE_TRS_AMOUNT, RESIZE_MOTIFS_AMOUNT)) {
+					perror("Error in inserting the current result in the TRs bundle\n");
 					return 1;
 				};
 				if ( copy_TRs_Bundle(last_tandem_found, previous_window_tandem) ) {
@@ -817,8 +828,8 @@ int start_TRs_search (Dot_Thread_input* param) {
 						switch (m->mask[window_index]) {
 							case (UNCHECKED) : {
 								/* tandem has not been checked before */ 				
-								if (insert_TRresult_inBundle(param->thread_TRs_bundle , last_tandem_found, RESIZE_TRS_AMOUNT, RESIZE_MOTIFS_AMOUNT)) {
-									perror("Error in inserting the current result in the Thread TRs bundle\n");
+								if (insert_TRresult_inBundle(param->TRs_bundle , last_tandem_found, RESIZE_TRS_AMOUNT, RESIZE_MOTIFS_AMOUNT)) {
+									perror("Error in inserting the current result in the TRs bundle\n");
 									return 1;
 								};
 								window_index++;
@@ -838,8 +849,8 @@ int start_TRs_search (Dot_Thread_input* param) {
 #ifdef DEBUG_ALG
 					printf("\tTRS WINDOW INDEX INTERSECTED:%d\n", window_index);				
 #endif
-					if (insert_TRresult_inBundle(param->thread_TRs_bundle , last_tandem_found, RESIZE_TRS_AMOUNT, RESIZE_MOTIFS_AMOUNT)) {
-						perror("Error in inserting the current result in the Thread TRs bundle\n");
+					if (insert_TRresult_inBundle(param->TRs_bundle , last_tandem_found, RESIZE_TRS_AMOUNT, RESIZE_MOTIFS_AMOUNT)) {
+						perror("Error in inserting the current result in the TRs bundle\n");
 						return 1;
 					};
 					/*reset_TRs_Bundle(previous_window_tandem);*/

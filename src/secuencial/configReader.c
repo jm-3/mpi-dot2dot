@@ -60,7 +60,7 @@ struct config *command_line_parser (int argc, char* argv[]) {
       break;
     case 'm':   /*  MinMatch  */
       cfg->flags += F_FLAG;
-      cfg->fvalue = (MATCH_ARRAY_TYPE) atof (optarg);
+      cfg->fvalue = atof (optarg);
       break;
     case 'o':   /*  Output file name  */
       cfg->flags += O_FLAG;
@@ -98,6 +98,7 @@ MATCH_ARRAY_TYPE **read_weights_matrix (struct paramList *param) {
   struct paramList *elem;
   MATCH_ARRAY_TYPE **m;
   int i;
+  float float2char;
   m = (MATCH_ARRAY_TYPE **) malloc (sizeof (MATCH_ARRAY_TYPE *) * MAXIND_ARRAY);
   if (m == NULL) {
     perror ("Memory allocation failure reading weights\n");
@@ -124,7 +125,13 @@ MATCH_ARRAY_TYPE **read_weights_matrix (struct paramList *param) {
 	elem->param[1] != 'c' && elem->param[1] != 'g' &&   \
 	elem->param[1] != 't' && elem->param[1] != 'n' ) continue;
 
-    m[(int) elem->param[0]][(int) elem->param[1]] = atof (elem->value);
+    float2char = 100 * atof(elem->value);
+    if(float2char > 100 || float2char < 0){
+      fprintf(stderr, "Error: weight values must be between 0 and 1, and only 2 decimals are allowed\n");
+      return NULL;
+    }
+
+    m[(int) elem->param[0]][(int) elem->param[1]] = (char) float2char;
     m[(int) elem->param[1]][(int) elem->param[0]] = m[(int) elem->param[0]][(int) elem->param[1]]; 
   }
   return m;
@@ -207,7 +214,7 @@ void param_list_parser (struct paramList *par_list, struct config *cfg) {
     if (strcmp (elem->param, "minmatch") == 0) {
       if ((cfg->flags & F_FLAG) == 0) {
 	cfg->flags += F_FLAG;
-	cfg->fvalue = (MATCH_ARRAY_TYPE) atof (elem->value);
+	cfg->fvalue = atof (elem->value);
       }
     }
     if (strcmp (elem->param, "sequence") == 0) {
@@ -304,7 +311,7 @@ struct paramList *loadConfigFromFile (char *filename) {
     if (l == NULL) return NULL;  /*  Does not free memory - the program will terminate  */
     strncpy (l->param, key, MAX_FILELINE);
     strncpy (l->value, val, MAX_FILELINE);
-    l->next = NULL;    
+    l->next = NULL;
     /* printf ("%s, %s\n",key, val); */
   }
   fclose (pf);

@@ -18,7 +18,7 @@ int main (int argc, char* argv[]) {
   struct outfile *output;
   struct sequence_t *seq; /*   contains information on the last loaded seq  */
   struct dot_matrix *dm;
-  Dot_Thread_input *param;
+  Dot_input *param;
   int res;
   
   cfg = command_line_parser (argc, argv);
@@ -63,7 +63,7 @@ int main (int argc, char* argv[]) {
   }
 
   if ((cfg->fvalue <= 0) || (cfg->fvalue > 1)) {
-    printf("MinMatch parameter must be included in (0,1]\n");
+    printf("MinMatch parameter must be included in (0,1]. Value given %f\n",cfg->fvalue);
     print_usage();
     free_weights_matrix (wm);
     free (cfg);  /* free config params struct  */
@@ -89,7 +89,7 @@ int main (int argc, char* argv[]) {
    
   /* algorithm run attempt */	
   seq = NULL;
-  if ((param = dot_Thread_obj_init(cfg, wm, fm, output, 0)) == NULL) { 
+  if ((param = dot_obj_init(cfg, wm, fm, output, 0)) == NULL) { 
       printf("Error in main() for param pointer\n"); 
       free_weights_matrix (wm);
       free (cfg);  /* free config params struct  */
@@ -132,14 +132,14 @@ int main (int argc, char* argv[]) {
 #ifdef DEBUG_THREAD      
       printf("WRITING...\n");        
 #endif          
-      if (param->thread_TRs_bundle->trs_found_offset > 0) {
+      if (param->TRs_bundle->trs_found_offset > 0) {
         /* FINAL LIST FILTERING */
-        filter (param->thread_TRs_bundle, param->config_params);
-        print_TRs_list_toFile (param->output , param->IDSeq, param->sequence, param->thread_TRs_bundle);
+        filter (param->TRs_bundle, param->config_params);
+        print_TRs_list_toFile (param->output , param->IDSeq, param->sequence, param->TRs_bundle);
       } else {
         printf("No Tandem Repeats found in %s\n", param->IDSeq);        
       }      
-      reset_dot_Thread_obj(param);
+      reset_dot_obj(param);
       dot_free(dm);
     }    
 
@@ -150,7 +150,7 @@ int main (int argc, char* argv[]) {
         return 1;
   }
   
-  destroy_dot_Thread_obj(&param);    
+  destroy_dot_obj(&param);    
   output_destroy (output);
   filemanager_destroy  (fm);
   free_weights_matrix (wm);

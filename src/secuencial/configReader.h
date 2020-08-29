@@ -40,7 +40,7 @@ struct config {
   char svalue[MAX_PARAM_LEN]; /**/
   char cvalue[MAX_PARAM_LEN];  /**/
   char output_filename[MAX_PARAM_LEN];
-  MATCH_ARRAY_TYPE fvalue;
+  float fvalue;
   strategy_t filter_type;
   float tollerance;
   _Bool allow_overlap;

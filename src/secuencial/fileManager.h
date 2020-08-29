@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 /*#define BUFF_SIZE 1048576 */
-#define BUFF_SIZE 4194304
+//#define BUFF_SIZE 4194304
 
 /*  #define MAX_LABEL_LENGTH  65  defined in common.h  */
 /*  #define MAX_PARAM_LEN 1024  defined in common.h  */

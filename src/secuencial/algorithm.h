@@ -12,7 +12,7 @@
 #define NO_TR_FOUND 0
 #define TR_FOUND 1
 
-/* Sizes for thread's TRs array... */
+/* Sizes for TRs array... */
 #define RESIZE_TRS_AMOUNT 100
 #define RESIZE_MOTIFS_AMOUNT 1000
 /* and for local TRs array  */
@@ -33,7 +33,8 @@ struct _TRs_result_t {
   short int period;
   _Bool valid_TR;  /*  Used for filtering  */
   float stats;  /*  Used for filtering  */
-  MATCH_ARRAY_TYPE purity_percentage;
+  //MATCH_ARRAY_TYPE purity_percentage;
+  float purity_percentage;
   unsigned long int motif_start_index; /* start index of motifs in motif_legths array of trs_result_bundle  */
   unsigned short int motifs_number; /* copy_number + insertion groups + final group */
 };
@@ -158,14 +159,14 @@ void destroy_result_struct(result_findTR** rs);
 \*****************************************************************************/
 
 /*****************************************************************************\
-**************************** DOT_THREAD_INPUT STRUCT **************************
+**************************** DOT_INPUT STRUCT **************************
 \*****************************************************************************/
 
-/*Thread input data structure*/
-struct _Dot_Thread_input {
+/*Input data structure*/
+struct _Dot_input {
   char* sequence;  /* input sequence  */
   char* IDSeq;  /*    sequence name  */
-  TRs_Result_Bundle *thread_TRs_bundle;
+  TRs_Result_Bundle *TRs_bundle;
   struct dot_matrix *matrix;
   struct config *config_params;
   struct filemanager *file_manager;
@@ -173,11 +174,11 @@ struct _Dot_Thread_input {
   struct outfile *output;
   short int t_id;
 };
-typedef struct _Dot_Thread_input Dot_Thread_input;
+typedef struct _Dot_input Dot_input;
 
-Dot_Thread_input* dot_Thread_obj_init(struct config *cp, MATCH_ARRAY_TYPE **wm, struct filemanager *fm, struct outfile* output, short int t_id );
-void destroy_dot_Thread_obj(Dot_Thread_input** obj);
-void reset_dot_Thread_obj(Dot_Thread_input* obj);
+Dot_input* dot_obj_init(struct config *cp, MATCH_ARRAY_TYPE **wm, struct filemanager *fm, struct outfile* output, short int t_id );
+void destroy_dot_obj(Dot_input** obj);
+void reset_dot_obj(Dot_input* obj);
 
 
 /*****************************************************************************\
@@ -202,8 +203,9 @@ char* copy_seqPart(int start_index, int length, char* seq) ;
  * Get the sum of 'window_length' values in the current string (current_match_index), using the arrays' pointers
  * referring to the nucleobase in window which start from 'window_index'
  */
-MATCH_ARRAY_TYPE getSumFromMatchValues(int window_length, int window_index, int current_match_index, MATCH_ARRAY_TYPE** pointers);
-
+//MATCH_ARRAY_TYPE getSumFromMatchValues(int window_length, int window_index, int current_match_index, MATCH_ARRAY_TYPE** pointers);
+//float getSumFromMatchValues(int window_length, int window_index, int current_match_index, MATCH_ARRAY_TYPE** pointers);
+float getSumFromMatchValues(int window_length, int window_index, int current_match_index, char**);
 
 /*
  * Initialize result_findTR* structure and return it.
@@ -219,7 +221,9 @@ result_findTR *init_results_struct ();
  * If max_jumps was higher then 0 this function could jump forward on the sequence (m->sequence) to find a Tandem Repeat stopped by some Insertions.
  *
  */
-int findTandemRepeats(int window_length, int window_index, struct dot_matrix * m, MATCH_ARRAY_TYPE minThreshold, int max_jumps, result_findTR* rs);
+//int findTandemRepeats(int window_length, int window_index, struct dot_matrix * m, MATCH_ARRAY_TYPE minThreshold, int max_jumps, result_findTR* rs);
+int findTandemRepeats(int window_length, int window_index, struct dot_matrix * m, float minThreshold, int max_jumps, result_findTR* rs);
+
 
 /*
  * Param: (TRs_result_t* prec, TRs_result_t* last)
@@ -249,12 +253,12 @@ int isLastIncluded(TRs_result_t* prec, TRs_result_t* last);
 void expansion_filter(TRs_Result_Bundle* TRs_bundle, TRs_Result_Bundle * last_tandem_found, int biggest_full_length, float tollerance);
 
 /*
- * Param: (Dot_Thread_input* param);
+ * Param: (Dot_input* param);
  *
  * Uses the structure above to start calling 'findTandemRepeats' function to find repeated sequences
  *
  */
-int start_TRs_search(Dot_Thread_input* param);
+int start_TRs_search(Dot_input* param);
 
 /*****************************************************************************\
 *******************************************************************************
