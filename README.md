@@ -19,6 +19,6 @@ MPI implementation of the algorithm Dot2Dot which is a method for tandem repeats
 	- hybrid: hybrid version (MPI + OpenMP)
 	- hybrid-variable: hybrid version with dynamic resource allocation		
 - tests: benchmarks and other tests about performance
-		- lustre: stripe size and count testing over big files
-		- secuencias: counting multisequence files tests
-		- pthreads: alternative pthreads implentation
+	- lustre: stripe size and count testing over big files
+	- secuencias: counting multisequence files tests
+	- pthreads: alternative pthreads implentation
