@@ -108,14 +108,10 @@ int main (int argc, char* argv[]) {
         continue;
     } 
     else {
-      if ((param->sequence = copy_string(seq->sequence)) == NULL) {
-          perror("Error in copying sequence in dot_thread_fn\n");            
-          return 1;
-      };
-      if ((param->IDSeq = copy_string(seq->label)) == NULL) {
-          perror("Error in copying label in dot_thread_fn\n");              
-          return 1;
-      };
+	
+      param->sequence = seq->sequence;
+      param->IDSeq = seq->label;
+
       dm = dot_init (seq, wm);
       if (dm == NULL) {
           perror("Error in creating dot_matrix\n");
